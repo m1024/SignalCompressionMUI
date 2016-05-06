@@ -1,0 +1,25 @@
+f:\m-note\documents\visual studio 2015\Projects\SignalCompressionMUI\SignalCompressionMUI\bin\Debug\SignalCompressionMUI.exe
+f:\m-note\documents\visual studio 2015\Projects\SignalCompressionMUI\SignalCompressionMUI\bin\Debug\SignalCompressionMUI.pdb
+f:\m-note\documents\visual studio 2015\Projects\SignalCompressionMUI\SignalCompressionMUI\bin\Debug\FirstFloor.ModernUI.dll
+f:\m-note\documents\visual studio 2015\Projects\SignalCompressionMUI\SignalCompressionMUI\bin\Debug\FirstFloor.ModernUI.xml
+f:\m-note\documents\visual studio 2015\Projects\SignalCompressionMUI\SignalCompressionMUI\obj\Debug\SignalCompressionMUI.csprojResolveAssemblyReference.cache
+f:\m-note\documents\visual studio 2015\Projects\SignalCompressionMUI\SignalCompressionMUI\obj\Debug\App.baml
+f:\m-note\documents\visual studio 2015\Projects\SignalCompressionMUI\SignalCompressionMUI\obj\Debug\App.g.cs
+f:\m-note\documents\visual studio 2015\Projects\SignalCompressionMUI\SignalCompressionMUI\obj\Debug\SignalCompressionMUI_MarkupCompile.cache
+f:\m-note\documents\visual studio 2015\Projects\SignalCompressionMUI\SignalCompressionMUI\obj\Debug\SignalCompressionMUI.g.resources
+f:\m-note\documents\visual studio 2015\Projects\SignalCompressionMUI\SignalCompressionMUI\obj\Debug\SignalCompressionMUI.exe
+f:\m-note\documents\visual studio 2015\Projects\SignalCompressionMUI\SignalCompressionMUI\obj\Debug\SignalCompressionMUI.pdb
+F:\M-NOTE\Documents\Visual Studio 2015\Projects\SignalCompressionMUI\SignalCompressionMUI\obj\Debug\Views\MainWindowView.baml
+F:\M-NOTE\Documents\Visual Studio 2015\Projects\SignalCompressionMUI\SignalCompressionMUI\obj\Debug\Views\RDPView.baml
+F:\M-NOTE\Documents\Visual Studio 2015\Projects\SignalCompressionMUI\SignalCompressionMUI\obj\Debug\Views\Settings\About.baml
+F:\M-NOTE\Documents\Visual Studio 2015\Projects\SignalCompressionMUI\SignalCompressionMUI\obj\Debug\Views\Settings\Appearance.baml
+F:\M-NOTE\Documents\Visual Studio 2015\Projects\SignalCompressionMUI\SignalCompressionMUI\obj\Debug\Views\Home.baml
+F:\M-NOTE\Documents\Visual Studio 2015\Projects\SignalCompressionMUI\SignalCompressionMUI\obj\Debug\Views\Settings\SettingsPage.baml
+F:\M-NOTE\Documents\Visual Studio 2015\Projects\SignalCompressionMUI\SignalCompressionMUI\obj\Debug\Views\MainWindowView.g.cs
+F:\M-NOTE\Documents\Visual Studio 2015\Projects\SignalCompressionMUI\SignalCompressionMUI\obj\Debug\Views\RDPView.g.cs
+F:\M-NOTE\Documents\Visual Studio 2015\Projects\SignalCompressionMUI\SignalCompressionMUI\obj\Debug\Views\Settings\About.g.cs
+F:\M-NOTE\Documents\Visual Studio 2015\Projects\SignalCompressionMUI\SignalCompressionMUI\obj\Debug\Views\Settings\Appearance.g.cs
+F:\M-NOTE\Documents\Visual Studio 2015\Projects\SignalCompressionMUI\SignalCompressionMUI\obj\Debug\Views\Home.g.cs
+F:\M-NOTE\Documents\Visual Studio 2015\Projects\SignalCompressionMUI\SignalCompressionMUI\obj\Debug\Views\Settings\SettingsPage.g.cs
+F:\Git\SignalCompressionMUI\SignalCompressionMUI\obj\Debug\SignalCompressionMUI.exe
+F:\Git\SignalCompressionMUI\SignalCompressionMUI\obj\Debug\SignalCompressionMUI.pdb
