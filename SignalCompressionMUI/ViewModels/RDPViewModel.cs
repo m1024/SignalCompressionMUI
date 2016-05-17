@@ -1,10 +1,10 @@
 ﻿using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
-using FirstFloor.ModernUI.Windows.Controls;
 using SignalCompressionMUI.Models;
+using SignalCompressionMUI.Views;
 
 namespace SignalCompressionMUI.ViewModels
 {
@@ -18,9 +18,21 @@ namespace SignalCompressionMUI.ViewModels
         private string _fileName;
         private int _epsilon = 1;
         private int _blockSize = 1000;
-        private ObservableCollection<Statistic> _statistic;
+        private List<Statistic> _statistic;
 
-        public ObservableCollection<Statistic> Statistic
+        private Visibility _pBar;
+
+        public Visibility PBar
+        {
+            get { return _pBar; }
+            set
+            {
+                _pBar = value;
+                OnPropertyChanged("PBar");
+            }
+        }
+
+        public List<Statistic> Statistic
         {
             get { return _statistic; }
             set
@@ -64,8 +76,8 @@ namespace SignalCompressionMUI.ViewModels
 
         public RDPViewModel()
         {
-            OpenFileCommand = new Command(arg => OpenFile());
-            ConvertCommand = new Command(arg => Convert());
+            PBar = Visibility.Hidden;
+            OpenFileCommand = new RelayCommand(arg => OpenFile());
         }
 
 
@@ -76,7 +88,28 @@ namespace SignalCompressionMUI.ViewModels
         /// </summary>
         public ICommand OpenFileCommand { get; set; }
 
-        public ICommand ConvertCommand { get; set; }
+
+        private AsyncDelegateCommand _сonvertCommand;
+        public ICommand ConvertCommand => _сonvertCommand ?? (_сonvertCommand = new AsyncDelegateCommand(LongConvert));
+
+        private async Task LongConvert(object o)
+        {
+            PBar = Visibility.Visible;
+            await Task.Delay(10000);
+            Model.Read(FileName);
+            Model.ConvertRdp(BlockSize.ToString(), Epsilon.ToString());
+            Statistic = Model.Stat;
+            ZedGraphView.CurveSourse = ZedGraphView.ListToPointList(RDPModel.SequenceSourse);
+            ZedGraphView.CurveNew = ZedGraphView.ListToPointList(RDPModel.PRez);
+
+            ZedGraphSpectrumView.SpectrumSourse =
+                ZedGraphSpectrumView.ArrayToPointList(ZedGraphSpectrumView.CalculateSpectrum(RDPModel.SequenceSourse));
+            Model.DeconvertRdp();
+            ZedGraphSpectrumView.SpectrumNew =
+                ZedGraphSpectrumView.ArrayToPointList(ZedGraphSpectrumView.CalculateSpectrum(RDPModel.SequenceSmoothed));
+
+            PBar = Visibility.Hidden;
+        }
 
         #endregion
 
@@ -97,22 +130,6 @@ namespace SignalCompressionMUI.ViewModels
                 var filename = dlg.FileName;
                 FileName = filename;
             }
-        }
-
-        private void Convert()
-        {
-            Model.Read(FileName);
-            Model.ConvertRdp(BlockSize.ToString(), Epsilon.ToString());
-
-            var list = Model.Stat;
-            var oc = new ObservableCollection<Statistic>();
-            foreach (var item in list)
-                oc.Add(item);
-
-            Statistic = oc;
-
-            ModernDialog.ShowMessage("Преобразование успешно завершено", "", MessageBoxButton.OK);
-            
         }
 
         #endregion

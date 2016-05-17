@@ -43,23 +43,6 @@ namespace SignalCompressionMUI.Models
         /// <summary>
         /// Разбиение последовательности на блоки
         /// </summary>
-        public static List<short[]> DivideSequence(int blockSize, short[] SequenceSourse)
-        {
-            var rez = new List<short[]>();
-            for (int i = 0; i < SequenceSourse.Length; i += blockSize)
-            {
-                if (i + blockSize > SequenceSourse.Length)
-                    blockSize = SequenceSourse.Length - i; //т.к. последний блок может быть короче
-                var block = new short[blockSize];
-                Array.Copy(SequenceSourse, i, block, 0, blockSize);
-                rez.Add(block);
-            }
-            return rez;
-        }
-
-        /// <summary>
-        /// Разбиение последовательности на блоки
-        /// </summary>
         public static List<short[]> DivideSequence(short[] sequense, int blockSize)
         {
             var rez = new List<short[]>();
@@ -90,6 +73,38 @@ namespace SignalCompressionMUI.Models
                 i += block.Length;
             }
             return rez;
+        }
+
+
+        public static List<byte[]> ShortsToBytes(List<short[]> data) => data.Select(ShortsToBytes).ToList();
+
+        public static List<short[]> BytesToShorts(List<byte[]> data) => data.Select(BytesToShorts).ToList(); 
+
+        public static byte[] ShortsToBytes(short[] data)
+        {
+            var bytes = new byte[data.Length*2];
+            for (int i = 0, j=0; i < data.Length; i++, j+=2)
+                FromShort(data[i], out bytes[j], out bytes[j+1]);
+            return bytes;
+        }
+
+        public static short[] BytesToShorts(byte[] data)
+        {
+            var shorts = new short[data.Length/2];
+            for (int i = 0, j = 0; i < data.Length - 1; i += 2, j++)
+                shorts[j] = ToShort(data[i], data[i + 1]);
+            return shorts;
+        }
+
+        private static short ToShort(short byte1, short byte2)
+        {
+            return (short)((byte2 << 8) + byte1);
+        }
+
+        private static void FromShort(short number, out byte byte1, out byte byte2)
+        {
+            byte2 = (byte)(number >> 8);
+            byte1 = (byte)(number & 255);
         }
     }
 }

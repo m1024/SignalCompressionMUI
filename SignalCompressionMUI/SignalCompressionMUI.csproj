@@ -37,6 +37,8 @@
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Data" />
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xml" />
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="System.Core" />
@@ -48,6 +50,11 @@
     <Reference Include="WindowsBase" />
     <Reference Include="PresentationCore" />
     <Reference Include="PresentationFramework" />
+    <Reference Include="WindowsFormsIntegration" />
+    <Reference Include="ZedGraph, Version=5.1.7.430, Culture=neutral, PublicKeyToken=02a83cbd123fcd60, processorArchitecture=MSIL">
+      <HintPath>..\packages\ZedGraph.5.1.7\lib\net35-Client\ZedGraph.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
     <ApplicationDefinition Include="App.xaml">
@@ -58,17 +65,57 @@
       <DependentUpon>App.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="Models\Algorithms\AlgorithmDCT.cs" />
+    <Compile Include="Models\Algorithms\AlgorithmRise.cs" />
+    <Compile Include="Models\Algorithms\AlgorithmRLE.cs" />
+    <Compile Include="Models\Algorithms\AlgorithmWv.cs" />
+    <Compile Include="Models\Algorithms\Spectrum\Complex.cs" />
+    <Compile Include="Models\Algorithms\Spectrum\FFT.cs" />
+    <Compile Include="Models\Algorithms\Spectrum\Spectrum.cs" />
+    <Compile Include="Models\DCTModel.cs" />
+    <Compile Include="Models\WaveletArray.cs" />
+    <Compile Include="Models\WaveletModel.cs" />
+    <Compile Include="Models\WaveletTree.cs" />
+    <Compile Include="ViewModels\AsyncDelegateCommand.cs" />
+    <Compile Include="ViewModels\DCTViewModel.cs" />
+    <Compile Include="ViewModels\EnumHelper.cs" />
+    <Compile Include="ViewModels\WaveletViewModel.cs" />
+    <Compile Include="Views\DCTView.xaml.cs">
+      <DependentUpon>DCTView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Views\WaveletView.xaml.cs">
+      <DependentUpon>WaveletView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Views\ZedGraphSpectrumView.xaml.cs">
+      <DependentUpon>ZedGraphSpectrumView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Views\ZedGraphView.xaml.cs">
+      <DependentUpon>ZedGraphView.xaml</DependentUpon>
+    </Compile>
+    <Page Include="Views\DCTView.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Views\GraphView.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="Views\MainWindowView.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
     <Compile Include="Models\Algorithms\AlgorithmRDP.cs" />
     <Compile Include="Models\AccessoryFunc.cs" />
+    <Compile Include="Models\GraphModel.cs" />
     <Compile Include="Models\RDPModel.cs" />
     <Compile Include="Models\Statistic.cs" />
-    <Compile Include="ViewModels\Command.cs" />
+    <Compile Include="ViewModels\RelayCommand.cs" />
+    <Compile Include="ViewModels\GraphViewModel.cs" />
     <Compile Include="ViewModels\MainWindowViewModel.cs" />
     <Compile Include="ViewModels\RDPViewModel.cs" />
+    <Compile Include="Views\GraphView.xaml.cs">
+      <DependentUpon>GraphView.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Views\MainWindowView.xaml.cs">
       <DependentUpon>MainWindowView.xaml</DependentUpon>
       <SubType>Code</SubType>
@@ -95,26 +142,33 @@
       <DependentUpon>Appearance.xaml</DependentUpon>
     </Compile>
     <Compile Include="ViewModels\AppearanceViewModel.cs" />
-    <Page Include="Views\Home.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
     <Page Include="Views\Settings\SettingsPage.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Compile Include="Views\Home.xaml.cs">
-      <DependentUpon>Home.xaml</DependentUpon>
-    </Compile>
     <Compile Include="Views\Settings\SettingsPage.xaml.cs">
       <DependentUpon>SettingsPage.xaml</DependentUpon>
     </Compile>
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Page Include="Views\WaveletView.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Views\ZedGraphSpectrumView.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Views\ZedGraphView.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <Content Include="License-LGPL.txt" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

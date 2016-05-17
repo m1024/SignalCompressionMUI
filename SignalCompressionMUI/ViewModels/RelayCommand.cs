@@ -3,11 +3,11 @@ using System.Windows.Input;
 
 namespace SignalCompressionMUI.ViewModels
 {
-    class Command : ICommand
+    class RelayCommand : ICommand
     {
         #region Constructor
 
-        public Command(Action<object> action)
+        public RelayCommand(Action<object> action)
         {
             ExecuteDelegate = action;
         }

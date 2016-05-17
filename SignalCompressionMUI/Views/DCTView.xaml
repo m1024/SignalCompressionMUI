@@ -1,0 +1,74 @@
+﻿<UserControl x:Class="SignalCompressionMUI.Views.DCTView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:mui="http://firstfloorsoftware.com/ModernUI"
+             mc:Ignorable="d" 
+             d:DesignHeight="600" d:DesignWidth="1300">
+    <Grid Style="{StaticResource ContentRoot}">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="4"/>
+            <ColumnDefinition Width="2*"/>
+        </Grid.ColumnDefinitions>
+
+        <StackPanel Grid.Column="0">
+            <Grid Margin="5">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="3*"></ColumnDefinition>
+                    <ColumnDefinition Width="*"></ColumnDefinition>
+                </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                    <RowDefinition></RowDefinition>
+                    <RowDefinition></RowDefinition>
+                    <RowDefinition></RowDefinition>
+                    <RowDefinition></RowDefinition>
+                </Grid.RowDefinitions>
+
+                <TextBox Grid.Column="0" Grid.Row="0" x:Name="FileNameTextBox" IsReadOnly="True"   Padding="3" Margin="0 0 5 0" MinWidth="200" Text="{Binding FileName}"/>
+                <Button Grid.Column="1" Grid.Row="0" x:Name="OpenFileButton" Content="Обзор" Padding="3" Margin="0 0 5 0" Command="{Binding OpenFileCommand}"></Button>
+
+                <TextBlock Grid.Column="0" Grid.Row="1" MinWidth="150" Margin="5 10 5 5">Длина блока</TextBlock>
+                <TextBox Grid.Column="1" Grid.Row="1" x:Name="DcpBlockSize" MinWidth="50" Margin="0 10 5 5" Text="{Binding BlockSize}"></TextBox>
+
+                <TextBlock MinWidth="150" Grid.Row="2" Grid.Column="0" Margin="5 0 5 5">Оставить коэффициентов</TextBlock>
+                <TextBox Grid.Row="2" Grid.Column="1" MinWidth="50" Margin="0 0 5 5" Text="{Binding CoeffCount}"></TextBox>
+
+                <TextBlock MinWidth="150"  Grid.Column="0" Grid.Row="3" Margin="5 0 5 5">Из них DC коэффициентов</TextBlock>
+                <TextBox  Grid.Column="1" Grid.Row="3" MinWidth="50" Margin="0 0 5 5" Text="{Binding CoeffDC}"></TextBox>
+                
+            </Grid>
+            
+            <TextBlock Margin="5 10 0 0">Вектор коэффициентов:</TextBlock>
+            <WrapPanel Margin="5">
+                <TextBox x:Name="DcpKoefVector0" MinWidth="30" Margin="5 0 0 0" Text="{Binding CoeffCorrection[0].Value, Mode=TwoWay}"></TextBox>
+                <TextBox x:Name="DcpKoefVector1" MinWidth="30" Margin="5 0 0 0" Text="{Binding CoeffCorrection[1].Value, Mode=TwoWay}"></TextBox>
+                <TextBox x:Name="DcpKoefVector2" MinWidth="30" Margin="5 0 0 0" Text="{Binding CoeffCorrection[2].Value, Mode=TwoWay}"></TextBox>
+                <TextBox x:Name="DcpKoefVector3" MinWidth="30" Margin="5 0 0 0" Text="{Binding CoeffCorrection[3].Value, Mode=TwoWay}"></TextBox>
+                <TextBox x:Name="DcpKoefVector4" MinWidth="30" Margin="5 0 0 0" Text="{Binding CoeffCorrection[4].Value, Mode=TwoWay}"></TextBox>
+                <TextBox x:Name="DcpKoefVector5" MinWidth="30" Margin="5 0 0 0" Text="{Binding CoeffCorrection[5].Value, Mode=TwoWay}"></TextBox>
+                <TextBox x:Name="DcpKoefVector6" MinWidth="30" Margin="5 0 0 0" Text="{Binding CoeffCorrection[6].Value, Mode=TwoWay}"></TextBox>
+                <TextBox x:Name="DcpKoefVector7" MinWidth="30" Margin="5 0 0 0" Text="{Binding CoeffCorrection[7].Value, Mode=TwoWay}"></TextBox>
+            </WrapPanel>
+            <TextBlock Margin="5 10 0 0">Метод сжатия:</TextBlock>
+            <GroupBox  Margin="10 0 10 10" BorderThickness="0.55">
+                <StackPanel Margin="0 10 0 0">
+                    <RadioButton x:Name="DcpNothing" Margin="10 0" IsChecked="{Binding CompressTypeNothing, Mode=TwoWay}">Без сжатия</RadioButton>
+                    <RadioButton x:Name="DcpRise" Margin="10 0" IsChecked="{Binding CompressTypeRise, Mode=TwoWay}">Алгоритм Райса</RadioButton>
+                    <RadioButton x:Name="DcpRiseRle" Margin="10 0" IsChecked="{Binding CompressTypeRiseRle, Mode=TwoWay}">Райс + RLE</RadioButton>
+                    <RadioButton x:Name="DcpRiseRleAcDc" Margin="10 0" IsChecked="{Binding CompressTypeRiseRleAcDc, Mode=TwoWay}">Райс + RLE + AC,DC</RadioButton>
+                    <RadioButton x:Name="DcpRiseAcDc" Margin="10 0" IsChecked="{Binding CompressTypeRiseAcDc, Mode=TwoWay}">Райс + AC,DC</RadioButton>
+                </StackPanel>
+            </GroupBox>
+            <Button Command="{Binding ConvertCommand}" Margin="10">Преобразовать</Button>
+            <ProgressBar x:Name="ProgressBar" Minimum="0" Maximum="1" Height="16" IsIndeterminate="True" Margin="10" Visibility="{Binding Path=PBar, IsAsync=True}"/>
+        </StackPanel>
+
+        <GridSplitter Grid.Column="1" />
+
+        <DataGrid x:Name="StatisticTable"  Grid.Column="2" Grid.Row="0" IsReadOnly="true" ItemsSource="{Binding Path=StatisticTable}">
+        </DataGrid>
+        
+    </Grid>
+</UserControl>

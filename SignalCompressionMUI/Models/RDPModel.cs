@@ -7,7 +7,7 @@ namespace SignalCompressionMUI.Models
 {
     class RDPModel
     {
-        private static MyPoint[] _pRez;
+        public static MyPoint[] PRez;
         public static short[] SequenceSmoothed;
         public static short[] SequenceSourse;
         public static int MaxDeviationInd;
@@ -71,21 +71,21 @@ namespace SignalCompressionMUI.Models
                 blockStat.BlockSourseSize = blockSize * 2;
                 blockStat.Additions = AlgorithmRDP.Additions - blockStat.Additions;
                 blockStat.Multiplications = AlgorithmRDP.Multiplications - blockStat.Multiplications;
-                blockStat.CompressionRatio =
-                    (float)Math.Round(blockSize / (smoothSequence.ElementAt(i / blockSize).Length * 1.5), 3);
+                //blockStat.CompressionRatio =
+                //    (float)Math.Round(blockSize / (smoothSequence.ElementAt(i / blockSize).Length * 1.5), 3);
                 blockStat.RecursiveCalls = AlgorithmRDP.MaxCalls;
 
                 Stat.Add(blockStat);
             }
 
-            _pRez = new MyPoint[smooothSeqLength + 1];
+            PRez = new MyPoint[smooothSeqLength + 1];
             j = 0;
             foreach (var block in smoothSequence)
             {
                 for (int i = 0; i < block.Length - 1; i++)
-                    _pRez[j++] = block[i];
+                    PRez[j++] = block[i];
             }
-            _pRez[j] = smoothSequence.Last().Last();
+            PRez[j] = smoothSequence.Last().Last();
 
             //textBoxKmin.Text = stat.OrderBy(u => u.СompressionRatio).First().СompressionRatio.ToString();
             //textBoxKmax.Text = stat.OrderByDescending(u => u.СompressionRatio).First().СompressionRatio.ToString();
@@ -97,24 +97,24 @@ namespace SignalCompressionMUI.Models
         /// </summary>
         public void DeconvertRdp()
         {
-            SequenceSmoothed = new short[_pRez[_pRez.Length - 1].X + 1];
+            SequenceSmoothed = new short[PRez[PRez.Length - 1].X + 1];
 
-            SequenceSmoothed[0] = _pRez[0].Y;
+            SequenceSmoothed[0] = PRez[0].Y;
             var n = 1;
-            for (int i = 1; i < _pRez.Length && n < SequenceSmoothed.Length; i++)
+            for (int i = 1; i < PRez.Length && n < SequenceSmoothed.Length; i++)
             {
-                if (_pRez[i].X - _pRez[i - 1].X > 1)
+                if (PRez[i].X - PRez[i - 1].X > 1)
                 {
-                    var deltaX = _pRez[i].X - _pRez[i - 1].X;
-                    var deltaY = _pRez[i].Y - _pRez[i - 1].Y;
+                    var deltaX = PRez[i].X - PRez[i - 1].X;
+                    var deltaY = PRez[i].Y - PRez[i - 1].Y;
 
-                    for (int j = 1; j < (_pRez[i].X - _pRez[i - 1].X) && n < SequenceSmoothed.Length; j++)
-                        SequenceSmoothed[n++] = (short)((double)deltaY / deltaX * j + _pRez[i - 1].Y);
-                    SequenceSmoothed[n++] = _pRez[i].Y;
+                    for (int j = 1; j < (PRez[i].X - PRez[i - 1].X) && n < SequenceSmoothed.Length; j++)
+                        SequenceSmoothed[n++] = (short)((double)deltaY / deltaX * j + PRez[i - 1].Y);
+                    SequenceSmoothed[n++] = PRez[i].Y;
                 }
                 else
                 {
-                    SequenceSmoothed[n++] = _pRez[i].Y;
+                    SequenceSmoothed[n++] = PRez[i].Y;
                 }
             }
         }
