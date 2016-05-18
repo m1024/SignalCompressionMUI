@@ -17,7 +17,17 @@ namespace SignalCompressionMUI.Models.Algorithms
         [Description("Добеши D8")]
         D8,
         [Description("Добеши D10")]
-        D10
+        D10,
+        [Description("Добеши D12")]
+        D12,
+        [Description("Добеши D14")]
+        D14,
+        [Description("Добеши D16")]
+        D16,
+        [Description("Добеши D18")]
+        D18,
+        [Description("Добеши D20")]
+        D20
     }
 
     public static class AlgorithmWv
@@ -34,6 +44,17 @@ namespace SignalCompressionMUI.Models.Algorithms
         private static readonly double[] D8 = {0.32580343, 1.01094572, 0.8922014, -0.03957503, -0.26450717, 0.0436163, 0.0465036, -0.01498699};
 
         private static readonly double[] D10 = {0.22641898, 0.85394354, 1.02432694, 0.19576696, -0.34265671, -0.04560113, 0.10970265, -0.00882680, -0.01779187, 4.71742793e-3};
+
+        private static readonly double[] D12 = { 0.15774243, 0.69950381, 1.06226376, 0.44583132, -0.31998660, -0.18351806, 0.13788809, 0.03892321, -0.04466375, 7.83251152e-4, 6.75606236e-3, -1.52353381e-3 };
+
+        private static readonly double[] D14 = { 0.11009943, 0.56079128, 1.03114849, 0.66437248, -0.20351382, -0.31683501, 0.1008467, 0.11400345, -0.05378245, -0.02343994, 0.01774979, 6.07514995e-4, -2.54790472e-3, 5.00226853e-4 };
+
+        private static readonly double[] D16 = { 0.07695562, 0.44246725, 0.95548615, 0.82781653, -0.02238574, -0.40165863, 6.68194092e-4, 0.18207636, -0.02456390, -0.06235021, 0.01977216, 0.01236884, -6.88771926e-3, -5.54004549e-4, 9.55229711e-4, -1.66137261e-4 };
+
+        private static readonly double[] D18 = { 0.05385035, 0.34483430, 0.34483430, 0.92954571, 0.18836955, -0.41475176, -0.13695355, 0.21006834, 0.043452675, -0.09564726, 3.54892813e-4, 0.03162417, -6.67962023e-3, -6.05496058e-3, 2.61296728e-3, 3.25814671e-4, -3.56329759e-4, 5.5645514e-5 };
+
+        private static readonly double[] D20 = { 0.03771716, 0.26612218, 0.74557507, 0.97362811, 0.39763774, -0.35333620, -0.27710988, 0.18012745, 0.13160299, -0.10096657, -0.04165925, 0.04696981, 5.10043697e-3, -0.01517900, 1.97332536e-3, 2.81768659e-3, -9.69947840e-4, -1.64709006e-4, 1.32354367e-4, -1.875841e-5 };
+
         #endregion
 
         public static int Delta => CH.Count - 2;
@@ -98,6 +119,21 @@ namespace SignalCompressionMUI.Models.Algorithms
                     break;
                 case WaveletType.D10:
                     CL = D10.ToList();
+                    break;
+                case WaveletType.D12:
+                    CL = D12.ToList();
+                    break;
+                case WaveletType.D14:
+                    CL = D14.ToList();
+                    break;
+                case WaveletType.D16:
+                    CL = D16.ToList();
+                    break;
+                case WaveletType.D18:
+                    CL = D18.ToList();
+                    break;
+                case WaveletType.D20:
+                    CL = D20.ToList();
                     break;
             }
         }

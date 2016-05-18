@@ -261,6 +261,11 @@ namespace SignalCompressionMUI.Models.Algorithms
                 encoded.Insert(index, (short)(++countDiff << 1 | 1));
                 encoded.Add(previous);
             }
+            else //послдений, после последовательности одинаковых
+            {
+                encoded.Add((short)3); //то же что (1 << 1 | 1) - последовательность разных, длиной 1
+                encoded.Add(previous);
+            }
 
             return encoded.ToArray();
         }

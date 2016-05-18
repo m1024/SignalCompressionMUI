@@ -6,7 +6,6 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
 using SignalCompressionMUI.Models;
-using SignalCompressionMUI.Models.Algorithms;
 using SignalCompressionMUI.Views;
 
 namespace SignalCompressionMUI.ViewModels
@@ -20,7 +19,6 @@ namespace SignalCompressionMUI.ViewModels
         private int _coeffCount = 4;
         private int _coeffDC = 2;
         private List<Statistic> _statisticTable;
-        private CompressType _compressionType;
         private bool _compressTypeNothing;
         private bool _compressTypeRise;
         private bool _compressTypeRiseRle;

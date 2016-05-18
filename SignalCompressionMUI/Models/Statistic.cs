@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace SignalCompressionMUI.Models
 {
@@ -12,6 +14,7 @@ namespace SignalCompressionMUI.Models
         public ulong Multiplications { get; set; }
         public float CompressionRatio => (float)BlockSourseSize/BlockRezultSize;
         public int RecursiveCalls { get; set; }
+        public long Error { get; set; }
 
         public static Statistic operator +(Statistic s1, Statistic s2)
         {
@@ -25,6 +28,44 @@ namespace SignalCompressionMUI.Models
                 Multiplications = s1.Multiplications + s2.Multiplications,
                 RecursiveCalls = s1.RecursiveCalls + s2.RecursiveCalls,
             };
+        }
+
+        public static Statistic CalculateTotal(List<Statistic> stat)
+        {
+            var total = new Statistic();
+            foreach (var s in stat)
+            {
+                total.Time += s.Time;
+                total.BlockRezultSize += s.BlockRezultSize;
+                total.BlockSourseSize += s.BlockSourseSize;
+                total.RecursiveCalls += s.RecursiveCalls;
+                total.Error += s.Error;
+            }
+            return total;
+        }
+
+        public static void CalculateError(short[] sourse, short[] smooth, ref List<Statistic> stat, int blokSize)
+        {
+            var sourseBlocks = AccessoryFunc.DivideSequence(sourse, blokSize);
+            var smoothBlocks = AccessoryFunc.DivideSequence(smooth, blokSize);
+
+            //выбираем наименьшую длину
+            int len = sourseBlocks.Count < smoothBlocks.Count ? sourseBlocks.Count : smoothBlocks.Count;
+            len = stat.Count < len ? stat.Count : len;
+
+            var statArr = stat.ToArray();
+
+            for (int i = 0; i < len; i++)
+            {
+                long error = 0;
+                for (int j = 0; j < blokSize; j++)
+                {
+                    error += Math.Abs(sourseBlocks[i][j] - smoothBlocks[i][j]);
+                }
+                statArr[i].Error = error;
+            }
+
+            stat = statArr.ToList();
         }
     }
 }

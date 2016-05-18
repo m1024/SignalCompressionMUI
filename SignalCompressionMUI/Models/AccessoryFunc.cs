@@ -4,6 +4,8 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Threading;
+using SignalCompressionMUI.Models.Algorithms;
+using SignalCompressionMUI.ViewModels;
 
 namespace SignalCompressionMUI.Models
 {
@@ -41,6 +43,19 @@ namespace SignalCompressionMUI.Models
         }
 
         /// <summary>
+        /// Запись в файл
+        /// </summary>
+        public static void WriteFile(string fileName, byte[] data)
+        {
+            File.WriteAllBytes(fileName, data);
+        }
+
+        public static byte[] ReadFile(string fileName)
+        {
+            return File.ReadAllBytes(fileName);
+        }
+
+        /// <summary>
         /// Разбиение последовательности на блоки
         /// </summary>
         public static List<short[]> DivideSequence(short[] sequense, int blockSize)
@@ -75,6 +90,83 @@ namespace SignalCompressionMUI.Models
             return rez;
         }
 
+        public static byte[] ConcatSequence(List<byte[]> sequence)
+        {
+            if (sequence.Count <= 1) return sequence.FirstOrDefault();
+            if (sequence.Last() == null) sequence.RemoveAt(sequence.Count - 1); //в некоторых случаях такое возможно
+            int length = sequence.First().Length * (sequence.Count - 1) + sequence.Last().Length;
+            var rez = new byte[length];
+            int i = 0;
+            foreach (var block in sequence)
+            {
+                Array.Copy(block, 0, rez, i, block.Length);
+                i += block.Length;
+            }
+            return rez;
+        }
+
+        public static byte[] ConcatSequence(List<List<byte[]>> sequence)
+        {
+            var res = new List<byte>();
+            foreach (var b in sequence.Select(ConcatSequence))
+                res.AddRange(b);
+            return res.ToArray();
+        }
+
+        public static byte[] CreateForSaving(List<List<byte[]>> sequence, CompressType type)
+        {
+            var outbytes = new List<byte>();
+            outbytes.Add((byte)type); //тип сжатия
+            //в начало каждого списка и массива надо добавить его длину, причем в два байта и тип сжатия который использовался
+            var blocksCount = BitConverter.GetBytes((short)sequence.Count);
+            outbytes.AddRange(blocksCount);
+
+            foreach (var block in sequence)
+            {
+                var subblocksCount = BitConverter.GetBytes((short) block.Count);
+                outbytes.AddRange(subblocksCount);
+
+                foreach (var subblock in block)
+                {
+                    var numsCount = BitConverter.GetBytes((short) subblock.Length);
+                    outbytes.AddRange(numsCount);
+                    outbytes.AddRange(subblock);
+                }
+            }
+
+            return outbytes.ToArray();
+        }
+
+        public static List<List<byte[]>> CreateFromSaving(byte[] data, out CompressType type)
+        {
+            type = (CompressType) data[0];
+            var blocksCount = BitConverter.ToInt16(data, 1);
+            int index = 3;
+
+            var sequence = new List<List<byte[]>>();
+            for (int i = 0; i < blocksCount; i++)
+            {
+                var block = new List<byte[]>();
+                var subblocksCount = BitConverter.ToInt16(data, index);
+                index += 2;
+
+                for (int j = 0; j < subblocksCount; j++)
+                {
+                    var numsCount = BitConverter.ToInt16(data, index);
+                    index += 2;
+
+                    var subblock = new byte[numsCount];
+                    Array.Copy(data, index, subblock, 0, numsCount);
+                    index += numsCount;
+
+                    block.Add(subblock);
+                }
+
+                sequence.Add(block);
+            }
+
+            return sequence;
+        } 
 
         public static List<byte[]> ShortsToBytes(List<short[]> data) => data.Select(ShortsToBytes).ToList();
 

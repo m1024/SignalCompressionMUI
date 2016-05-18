@@ -12,9 +12,9 @@ DEBUG;TRACE
 F:\Git\SignalCompressionMUI\SignalCompressionMUI\App.xaml
 10-333469946
 1-1767438219
-411339588964
+451231283711
 17-352152037
 Views\DCTView.xaml;Views\GraphView.xaml;Views\MainWindowView.xaml;Views\RDPView.xaml;Views\Settings\About.xaml;Views\Settings\Appearance.xaml;Views\Settings\SettingsPage.xaml;Views\WaveletView.xaml;Views\ZedGraphSpectrumView.xaml;Views\ZedGraphView.xaml;
 
-False
+True
 

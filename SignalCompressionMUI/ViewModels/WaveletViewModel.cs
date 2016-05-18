@@ -1,12 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.IO;
 using System.Linq;
 using System.Windows;
 using System.Windows.Input;
 using FirstFloor.ModernUI.Windows.Controls;
 using SignalCompressionMUI.Models;
 using SignalCompressionMUI.Models.Algorithms;
+using SignalCompressionMUI.Models.Algorithms.Huffman;
 using SignalCompressionMUI.Views;
 
 namespace SignalCompressionMUI.ViewModels
@@ -15,23 +17,36 @@ namespace SignalCompressionMUI.ViewModels
     {
         [Description("Все")]
         All,
+        [Description("Три четверти")]
+        ThreeQuarter,
         [Description("Половина")]
         Half,
         [Description("Четверть")]
-        Quart
+        OneQuarter
     }
+    public enum CompressType : int { Nothing = 0, Rise = 1, Rle = 2, RiseRle = 3, Huffman = 4, RiseHuffman = 5}
+
     class WaveletViewModel : INotifyPropertyChanged
     {
         #region Fields and properties
 
         private string _fileName;
-        private int _blockSize = 1000;
+        private int _blockSize = 1024;
         private СoeffCount _coeffCount;
         private int _rounding = 10;
         private int _depth = 2;
         private List<Statistic> _statisticTable;
         private Visibility _pBar;
         private WaveletType _wvType;
+        private int _rleCount;
+        private bool _compressTypeNothing;
+        private bool _compressTypeRise;
+        private bool _compressTypeRle;
+        private bool _compressTypeRiseRle;
+        private bool _compressTypeHuffman;
+        private bool _compressTypeRiseHuffman;
+        private bool _saveIsEnabled;
+        private bool _convertIsEnabled;
 
         public СoeffCount CoeffCount
         {
@@ -52,6 +67,35 @@ namespace SignalCompressionMUI.ViewModels
                 OnPropertyChanged("WvType");
             }
         }
+        public bool SaveIsEnabled
+        {
+            get { return _saveIsEnabled; }
+            set
+            {
+                _saveIsEnabled = value;
+                OnPropertyChanged("SaveIsEnabled");
+            }
+        }
+
+        public bool ConvertIsEnabled
+        {
+            get { return _convertIsEnabled; }
+            set
+            {
+                _convertIsEnabled = value;
+                OnPropertyChanged("ConvertIsEnabled");
+            }
+        }
+
+        public int RleCount
+        {
+            get { return _rleCount; }
+            set
+            {
+                _rleCount = value;
+                OnPropertyChanged("RleCount");
+            }
+        }
 
         public int Rounding
         {
@@ -69,7 +113,7 @@ namespace SignalCompressionMUI.ViewModels
             get { return _depth; }
             set
             {
-                if (CoeffCount == СoeffCount.Quart && value < 1) return;
+                if ((CoeffCount == СoeffCount.OneQuarter || CoeffCount == СoeffCount.ThreeQuarter) && value < 1) return;
                 if (value >= 0)
                     _depth = value;
                 OnPropertyChanged("Depth");
@@ -117,12 +161,80 @@ namespace SignalCompressionMUI.ViewModels
             }
         }
 
+        public CompressType CompressionType { get; set; }
+
+        public bool CompressTypeNothing
+        {
+            get { return _compressTypeNothing; }
+            set
+            {
+                _compressTypeNothing = value;
+                if (value) CompressionType = CompressType.Nothing;
+                OnPropertyChanged("CompressTypeNothing");
+            }
+        }
+
+        public bool CompressTypeRise
+        {
+            get { return _compressTypeRise; }
+            set
+            {
+                _compressTypeRise = value;
+                if (value) CompressionType = CompressType.Rise;
+                OnPropertyChanged("CompressTypeRise");
+            }
+        }
+        public bool CompressTypeRiseRle
+        {
+            get { return _compressTypeRiseRle; }
+            set
+            {
+                _compressTypeRiseRle = value;
+                if (value) CompressionType = CompressType.RiseRle;
+                OnPropertyChanged("CompressTypeRiseRle");
+            }
+        }
+        public bool CompressTypeRle
+        {
+            get { return _compressTypeRle; }
+            set
+            {
+                _compressTypeRle = value;
+                if (value) CompressionType = CompressType.Rle;
+                OnPropertyChanged("CompressTypeRle");
+            }
+        }
+        public bool CompressTypeHuffman
+        {
+            get { return _compressTypeHuffman; }
+            set
+            {
+                _compressTypeHuffman = value;
+                if (value) CompressionType = CompressType.Huffman;
+                OnPropertyChanged("CompressTypeHuffman");
+            }
+        }
+        public bool CompressTypeRiseHuffman
+        {
+            get { return _compressTypeRiseHuffman; }
+            set
+            {
+                _compressTypeRiseHuffman = value;
+                if (value) CompressionType = CompressType.RiseHuffman;
+                OnPropertyChanged("CompressTypeRiseHuffman");
+            }
+        }
+
         #endregion
 
         public WaveletViewModel()
         {
+            WaveletModel.OnCompressComplete += CompressedComplete;
+            WaveletModel.OnSourseParsingComplete += ParsingSourseComplete;
             OpenFileCommand = new RelayCommand(arg => OpenFile());
             ConvertCommand = new RelayCommand(arg => Convert());
+            SaveCommand = new RelayCommand(arg => SaveFile());
+            CompressTypeNothing = true;
             PBar = Visibility.Hidden;
             CoeffCount = СoeffCount.All;
         }
@@ -133,109 +245,193 @@ namespace SignalCompressionMUI.ViewModels
 
         public ICommand ConvertCommand { get; set; }
 
+        public ICommand SaveCommand { get; set; }
+
         #endregion
 
         #region Methods
 
+        private void ParsingSourseComplete()
+        {
+            ConvertIsEnabled = WaveletModel.SequenceSourse != null;
+        }
+
+        private void CompressedComplete()
+        {
+            SaveIsEnabled = WaveletModel.Compressed != null;
+        }
+
         private void Convert()
         {
-            try
-            {
-                WaveletModel.Read(FileName);
-            }
-            catch (Exception ex)
-            {
-                ModernDialog.ShowMessage(ex.Message, "Ошибка", MessageBoxButton.OK);
-                return;
-            }
-
-            //AlgorithmWv.Type = WaveletType.Haar;
-            //List<double> sl;
-            //List<double> sh;
-            //List<double> outList;
-            //AlgorithmWv.Convert(new List<short>() {(short) 1, (short) 2, (short) 3, (short) 4}, out sl, out sh);
-            //AlgorithmWv.Convert(new List<short>() { (short)1, (short)2, (short)3, (short)4}, out outList);
-            //List<short> deconv = AlgorithmWv.Deconvert(outList, AlgorithmWv.Delta);
-
-
-            ////------------------------------------------- Tree
-            //short[] block = new short[BlockSize];
-            //Array.Copy(WaveletModel.SequenceSourse, block, BlockSize);
-
-            //WaveletArray wvArray = new WaveletArray
-            //{
-            //    Sourse = block.ToList(),
-            //    ConvertType = WvType
-            //};
-            //wvArray.Convert();
-            //wvArray.Round(Rounding);
-
-            //var wvTree = new WaveletTree(wvArray);
-            //wvTree.BuildTree(Depth, Rounding);
-            //wvTree.ConvertedToRoot();
-
-            ////округление
-            //var rounded = WaveletModel.RoundListList(wvTree.Converted, Rounding);
-            //var derounded = WaveletModel.DeRoundListList(rounded, Rounding);
-
-
-            //var deconvWvTree = new WaveletTree { Converted = derounded };
-            //deconvWvTree.BuidDeconvTree();
-            //deconvWvTree.Deconvert(WvType);
-
-            //ZedGraphView.CurveSourse = ZedGraphView.ListToPointList(block);
-            //ZedGraphView.CurveNew = ZedGraphView.ListToPointList(deconvWvTree.wvArray.New.ToArray());
-
-
-            //ZedGraphSpectrumView.SpectrumSourse =
-            //    ZedGraphSpectrumView.ArrayToPointList(ZedGraphSpectrumView.CalculateSpectrum(block));
-            //ZedGraphSpectrumView.SpectrumNew =
-            //    ZedGraphSpectrumView.ArrayToPointList(ZedGraphSpectrumView.CalculateSpectrum(deconvWvTree.wvArray.New.ToArray()));
-            ////-----------------------------------------------------
-
-
-
             var stat = WaveletModel.Convert(WvType, CoeffCount, Rounding, BlockSize, Depth);
-            WaveletModel.Deconvert(_wvType, CoeffCount, Rounding);
+
+            switch (CompressionType)
+            {
+                case CompressType.Nothing:
+                {
+                    StatisticTable = stat;
+                    WaveletModel.Deconvert(_wvType, CoeffCount, Rounding);
+                    break;
+                }
+                case CompressType.Rise:  
+                {
+                    List<Statistic> statRise;
+                    var encoded = WaveletModel.EncodeRise(WaveletModel.ConvertedBlocks, out statRise);
+
+                    //сохранить
+                    WaveletModel.Compressed = AccessoryFunc.CreateForSaving(encoded, CompressionType);
+
+                    var statAll = new List<Statistic>();
+                    for (int i = 0; i < statRise.Count; i++)
+                    {
+                        var all = stat[i] + statRise[i];
+                        all.BlockRezultSize = statRise[i].BlockRezultSize;
+                        statAll.Add(all);
+                    }
+                    var decoded = WaveletModel.DecodeRise(encoded);
+                    WaveletModel.ConvertedBlocks = decoded;
+                    WaveletModel.Deconvert(_wvType, CoeffCount, Rounding);
+
+                    Statistic.CalculateError(WaveletModel.SequenceSourse, WaveletModel.SequenceSmoothed, ref statAll, BlockSize);
+                    statAll.Insert(0, Statistic.CalculateTotal(statAll));
+                    StatisticTable = statAll;
+
+                    break;
+                }
+                case CompressType.Rle:
+                {
+                    List<Statistic> statRle;
+                    var encoded = WaveletModel.EncodeRle(WaveletModel.ConvertedBlocks, out statRle);
+
+                    //сохранить
+                    WaveletModel.Compressed = AccessoryFunc.CreateForSaving(encoded, CompressionType);
+
+                    var statAll = new List<Statistic>();
+                    for (int i = 0; i < statRle.Count; i++)
+                    {
+                        var all = stat[i] + statRle[i];
+                        all.BlockRezultSize = statRle[i].BlockRezultSize;
+                        statAll.Add(all);
+                    }
+                    var decoded = WaveletModel.DecodeRle(encoded);
+
+                    WaveletModel.ConvertedBlocks = decoded;
+                    WaveletModel.Deconvert(_wvType, CoeffCount, Rounding);
+
+                    Statistic.CalculateError(WaveletModel.SequenceSourse, WaveletModel.SequenceSmoothed, ref statAll,
+                        BlockSize);
+                    statAll.Insert(0, Statistic.CalculateTotal(statAll));
+                    StatisticTable = statAll;
+
+                    break;
+                }
+                case CompressType.RiseRle:
+                {
+                    List<Statistic> statRise;
+                    List<Statistic> statRle;
+                    var encRle = WaveletModel.EncodeRleShort(WaveletModel.ConvertedBlocks, out statRle, RleCount);
+                    var encoded = WaveletModel.EncodeRise(encRle, out statRise);
+
+                    //сохранить
+                    WaveletModel.Compressed = AccessoryFunc.CreateForSaving(encoded, CompressionType);
+
+                    var statAll = new List<Statistic>();
+                    for (int i = 0; i < statRise.Count; i++)
+                    {
+                        var all = stat[i] + statRise[i] + statRle[i];
+                        all.BlockRezultSize = statRise[i].BlockRezultSize;
+                        statAll.Add(all);
+                    }
+                    var decoded = WaveletModel.DecodeRise(encoded);
+                    var decRle = WaveletModel.DecodeRleShort(decoded, RleCount);
+
+                    WaveletModel.ConvertedBlocks = decRle;
+                    WaveletModel.Deconvert(_wvType, CoeffCount, Rounding);
+
+                    Statistic.CalculateError(WaveletModel.SequenceSourse, WaveletModel.SequenceSmoothed, ref statAll,
+                        BlockSize);
+                    statAll.Insert(0, Statistic.CalculateTotal(statAll));
+                    StatisticTable = statAll;
+
+                    break;
+                }
+                case CompressType.Huffman:
+                {
+                    List<Statistic> statHuff;
+                    var encoded = WaveletModel.EncodeHuffman(WaveletModel.ConvertedBlocks, out statHuff);
+                    
+                    //сохранить
+                    WaveletModel.Compressed = AccessoryFunc.CreateForSaving(encoded, CompressionType);
+
+                    var statAll = new List<Statistic>();
+                    for (int i = 0; i < statHuff.Count; i++)
+                    {
+                        var all = stat[i] + statHuff[i];
+                        all.BlockRezultSize = statHuff[i].BlockRezultSize;
+                        statAll.Add(all);
+                    }
+                    var decoded = WaveletModel.DecodeHuffman(encoded);
+                    WaveletModel.ConvertedBlocks = decoded;
+                    WaveletModel.Deconvert(_wvType, CoeffCount, Rounding);
+
+                    Statistic.CalculateError(WaveletModel.SequenceSourse, WaveletModel.SequenceSmoothed, ref statAll,
+                        BlockSize);
+                    statAll.Insert(0, Statistic.CalculateTotal(statAll));
+                    StatisticTable = statAll;
+
+                    break;
+                }
+                case CompressType.RiseHuffman:
+                {
+                    List<Statistic> statRle;
+                    List<Statistic> statHuff;
+                    var encRise = WaveletModel.EncodeRleShort(WaveletModel.ConvertedBlocks, out statRle, RleCount);
+                    var encHuff = WaveletModel.EncodeHuffman(encRise, out statHuff);
+                    
+                    //сохранить
+                    WaveletModel.Compressed = AccessoryFunc.CreateForSaving(encHuff, CompressionType);
+
+                    var statAll = new List<Statistic>();
+                    for (int i = 0; i < statRle.Count; i++)
+                    {
+                        var all = stat[i] + statRle[i] + statHuff[i];
+                        all.BlockRezultSize = statHuff[i].BlockRezultSize;
+                        statAll.Add(all);
+                    }
+
+                    var decHuff = WaveletModel.DecodeHuffman(encHuff);
+                    var decRise = WaveletModel.DecodeRleShort(decHuff, RleCount);
+
+                    WaveletModel.ConvertedBlocks = decRise;
+                    WaveletModel.Deconvert(_wvType, CoeffCount, Rounding);
+
+                    Statistic.CalculateError(WaveletModel.SequenceSourse, WaveletModel.SequenceSmoothed, ref statAll,
+                        BlockSize);
+                    statAll.Insert(0, Statistic.CalculateTotal(statAll));
+                    StatisticTable = statAll;
+
+                    break;
+                }
+            }
 
             ZedGraphView.CurveSourse = ZedGraphView.ListToPointList(WaveletModel.SequenceSourse);
             ZedGraphView.CurveNew = ZedGraphView.ListToPointList(WaveletModel.SequenceSmoothed);
-
 
             ZedGraphSpectrumView.SpectrumSourse =
                 ZedGraphSpectrumView.ArrayToPointList(ZedGraphSpectrumView.CalculateSpectrum(WaveletModel.SequenceSourse));
             ZedGraphSpectrumView.SpectrumNew =
                 ZedGraphSpectrumView.ArrayToPointList(ZedGraphSpectrumView.CalculateSpectrum(WaveletModel.SequenceSmoothed));
-
-            StatisticTable = stat;
-
-
-            ////---------------------------------------- not tree
-            //WaveletArray wvArray = new WaveletArray
-            //{
-            //    Sourse = WaveletModel.SequenceSourse.ToList(),
-            //    ConvertType = WvType
-            //};
-            //wvArray.Convert();
-            //wvArray.Round(Rounding);
-            //wvArray.DeconvertRoundedHulf();
-
-            //ZedGraphView.CurveSourse = ZedGraphView.ListToPointList(WaveletModel.SequenceSourse);
-            //ZedGraphView.CurveNew = ZedGraphView.ListToPointList(wvArray.New.ToArray());
-
-            //ZedGraphSpectrumView.SpectrumSourse =
-            //    ZedGraphSpectrumView.ArrayToPointList(ZedGraphSpectrumView.CalculateSpectrum(WaveletModel.SequenceSourse));
-            //ZedGraphSpectrumView.SpectrumNew =
-            //    ZedGraphSpectrumView.ArrayToPointList(ZedGraphSpectrumView.CalculateSpectrum(wvArray.New.ToArray()));
-            ////------------------------------------
         }
 
         private void OpenFile()
         {
+            //var dialog = new System.Windows.Forms.FolderBrowserDialog();
+            //System.Windows.Forms.DialogResult result = dialog.ShowDialog();
+
             var dlg = new Microsoft.Win32.OpenFileDialog
             {
                 DefaultExt = ".txt",
-                Filter = "Text documents (.txt)|*.txt"
+                Filter = "Text documents (.txt)|*.txt|Emg compress files (.emgwv)|*.emgwv"
             };
 
             var result = dlg.ShowDialog();
@@ -244,6 +440,80 @@ namespace SignalCompressionMUI.ViewModels
                 // Open document
                 var filename = dlg.FileName;
                 FileName = filename;
+            }
+
+            //если открывают сжатый файл
+            var ext = Path.GetExtension(FileName);
+            WaveletModel.Compressed = null;
+            if (ext == ".emgwv")
+            {
+                WaveletModel.CompressedFromFile = AccessoryFunc.ReadFile(FileName);
+                DecompressFile();
+            }
+            else if (ext == ".txt")
+            {
+                try
+                {
+                    WaveletModel.Read(FileName);
+                }
+                catch (Exception ex)
+                {
+                    ModernDialog.ShowMessage(ex.Message, "Ошибка", MessageBoxButton.OK);
+                }
+            }
+        }
+
+        private void DecompressFile()
+        {
+            //надо все это в модель переместить
+            CompressType type;
+            var dec = AccessoryFunc.CreateFromSaving(WaveletModel.CompressedFromFile, out type);
+
+            switch (type)
+            {
+                case  CompressType.Rise:
+                {
+                    var decoded = WaveletModel.DecodeRise(dec);
+                    WaveletModel.ConvertedBlocks = decoded;
+                    WaveletModel.Deconvert(_wvType, CoeffCount, Rounding);
+                    break;
+                }
+            }
+
+            ZedGraphView.CurveSourse = ZedGraphView.ListToPointList(WaveletModel.SequenceSourse);
+            ZedGraphView.CurveNew = ZedGraphView.ListToPointList(WaveletModel.SequenceSmoothed);
+
+            ZedGraphSpectrumView.SpectrumSourse =
+                ZedGraphSpectrumView.ArrayToPointList(ZedGraphSpectrumView.CalculateSpectrum(WaveletModel.SequenceSourse));
+            ZedGraphSpectrumView.SpectrumNew =
+                ZedGraphSpectrumView.ArrayToPointList(ZedGraphSpectrumView.CalculateSpectrum(WaveletModel.SequenceSmoothed));
+        }
+
+        private void SaveFile()
+        {
+            // Configure save file dialog box
+            Microsoft.Win32.SaveFileDialog dlg = new Microsoft.Win32.SaveFileDialog();
+            dlg.FileName = "Compressed signal"; // Default file name
+            dlg.DefaultExt = ".emgwv"; // Default file extension
+            dlg.Filter = "Emg compress files (.emgwv)|*.emgwv"; // Filter files by extension
+
+            // Show save file dialog box
+            var result = dlg.ShowDialog();
+
+            // Process save file dialog box results
+            if (result == true)
+            {
+                // Save document
+                string filename = dlg.FileName;
+                try
+                {
+                    AccessoryFunc.WriteFile(filename, WaveletModel.Compressed);
+                    ModernDialog.ShowMessage("Файл успешно сохранен", "Результат операции", MessageBoxButton.OK);
+                }
+                catch (Exception ex)
+                {
+                    ModernDialog.ShowMessage(ex.Message, "Результат операции", MessageBoxButton.OK);
+                }
             }
         }
 

@@ -91,7 +91,18 @@ namespace SignalCompressionUnitTest
         [TestMethod]
         public void EncodeTest5()
         {
-            short[] array = { 3, 2, 3, 6, 5, 5, 1, 2, 3, 4, 4, 4, 8, 9 };
+            short[] array = { 3, 2, 3, 6, 5, 5, 1, 2, 3, 4, 4, 4, 8, 9, 0 };
+
+            var encoded = AlgorithmRLE.Encode(array);
+            var decoded = AlgorithmRLE.Decode(encoded);
+
+            CollectionAssert.AreEqual(array, decoded);
+        }
+
+        [TestMethod]
+        public void EncodeTest6()
+        {
+            short[] array = { 3, 2, 2, 0 };
 
             var encoded = AlgorithmRLE.Encode(array);
             var decoded = AlgorithmRLE.Decode(encoded);

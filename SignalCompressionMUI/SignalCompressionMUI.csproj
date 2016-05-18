@@ -69,6 +69,10 @@
     <Compile Include="Models\Algorithms\AlgorithmRise.cs" />
     <Compile Include="Models\Algorithms\AlgorithmRLE.cs" />
     <Compile Include="Models\Algorithms\AlgorithmWv.cs" />
+    <Compile Include="Models\Algorithms\Huffman\AlgorithmDynHuff.cs" />
+    <Compile Include="Models\Algorithms\Huffman\BitHelper.cs" />
+    <Compile Include="Models\Algorithms\Huffman\HuffmanTree.cs" />
+    <Compile Include="Models\Algorithms\Huffman\HuffmanTreeNode.cs" />
     <Compile Include="Models\Algorithms\Spectrum\Complex.cs" />
     <Compile Include="Models\Algorithms\Spectrum\FFT.cs" />
     <Compile Include="Models\Algorithms\Spectrum\Spectrum.cs" />

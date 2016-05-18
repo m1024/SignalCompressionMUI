@@ -41,8 +41,9 @@ namespace SignalCompressionMUI.Views
 
 
         public static IPointList ListToPointList(short[] points)
-        { 
+        {
             var pointsList = new PointPairList();
+            if (points == null) return pointsList;
             for (int i=0; i<points.Length; i++)
                 pointsList.Add(new PointPair(i, points[i]));
             return pointsList;
