@@ -17,7 +17,7 @@ namespace SignalCompressionMUI.Views
         public WaveletView()
         {
             InitializeComponent();
-            DataContext = new WaveletViewModel();
+            //_vm = (ProcessViewModel)Resources["vm"];
         }
     }
 }

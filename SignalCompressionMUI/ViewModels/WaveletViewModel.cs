@@ -2,13 +2,11 @@
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
-using System.Linq;
 using System.Windows;
 using System.Windows.Input;
 using FirstFloor.ModernUI.Windows.Controls;
 using SignalCompressionMUI.Models;
 using SignalCompressionMUI.Models.Algorithms;
-using SignalCompressionMUI.Models.Algorithms.Huffman;
 using SignalCompressionMUI.Views;
 
 namespace SignalCompressionMUI.ViewModels
@@ -47,6 +45,7 @@ namespace SignalCompressionMUI.ViewModels
         private bool _compressTypeRiseHuffman;
         private bool _saveIsEnabled;
         private bool _convertIsEnabled;
+        private BackgroundWorker _worker;
 
         public СoeffCount CoeffCount
         {
@@ -229,10 +228,20 @@ namespace SignalCompressionMUI.ViewModels
 
         public WaveletViewModel()
         {
+            _worker = new BackgroundWorker()
+            {
+                WorkerReportsProgress = true,
+                WorkerSupportsCancellation = true
+            };
+            _worker.DoWork += worker_DoWork;
+           // _worker.ProgressChanged += worker_ProgressChanged;
+            _worker.RunWorkerCompleted += worker_RunWorkerCompleted;
+
             WaveletModel.OnCompressComplete += CompressedComplete;
             WaveletModel.OnSourseParsingComplete += ParsingSourseComplete;
             OpenFileCommand = new RelayCommand(arg => OpenFile());
-            ConvertCommand = new RelayCommand(arg => Convert());
+            //ConvertCommand = new RelayCommand(arg => Convert());
+            ConvertCommand = new RelayCommand(arg => ConvertAssync());
             SaveCommand = new RelayCommand(arg => SaveFile());
             CompressTypeNothing = true;
             PBar = Visibility.Hidden;
@@ -250,6 +259,33 @@ namespace SignalCompressionMUI.ViewModels
         #endregion
 
         #region Methods
+
+        private void ConvertAssync()
+        {
+            PBar = Visibility.Visible;
+            if (!_worker.IsBusy)
+                _worker.RunWorkerAsync(this);
+        }
+        private void worker_DoWork(object sender, DoWorkEventArgs e)
+        {
+            var input = (WaveletViewModel)e.Argument;
+            input.Convert();
+            e.Result = input;
+        }
+
+        private void worker_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
+        {
+            if (e.Error != null)
+            {
+                // Ошибка была сгенерирована обработчиком события DoWork
+                MessageBox.Show(e.Error.Message, "Произошла ошибка");
+            }
+            else
+            {
+                var wvm = (WaveletViewModel) e.Result;
+                PBar = Visibility.Hidden;
+            }
+        }
 
         private void ParsingSourseComplete()
         {

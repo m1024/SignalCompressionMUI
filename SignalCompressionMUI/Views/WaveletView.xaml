@@ -10,9 +10,10 @@
              d:DesignHeight="650" d:DesignWidth="1300">
     <UserControl.Resources>
         <viewModels:EnumConverter x:Key="EnumConverter"></viewModels:EnumConverter>
+        <viewModels:WaveletViewModel x:Key="Vm" />
     </UserControl.Resources>
-    
-    <Grid Style="{StaticResource ContentRoot}">
+
+    <Grid Style="{StaticResource ContentRoot}" DataContext="{StaticResource ResourceKey=Vm}">
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="2*"/>
             <ColumnDefinition Width="4"/>
@@ -42,24 +43,24 @@
                 <TextBlock Grid.Column="0" Grid.Row="1" MinWidth="150" Margin="0 10 5 5">Длина блока</TextBlock>
                 <TextBox Grid.Column="1" Grid.Row="1" x:Name="DcpBlockSize" MinWidth="50" Margin="0 10 5 5" Text="{Binding BlockSize}"></TextBox>
 
-                <TextBlock ToolTip="Имеются в виду коэффициенты с учетом рекрсивного преобразования. Для глубины рекурсии 0 можно выбирать только значение 'Половина'" MinWidth="150" Grid.Row="2" Grid.Column="0" Margin="0 0 5 5">Оставить коэффициентов</TextBlock>
-                <ComboBox Grid.Row="2" Grid.Column="1" MinWidth="120" Margin="0 0 5 5" Padding="5" 
+                <TextBlock ToolTip="Имеются в виду коэффициенты с учетом рекрсивного преобразования. Для глубины рекурсии 0 можно выбирать только значение 'Половина'" MinWidth="150" Grid.Row="5" Grid.Column="0" Margin="0 5 5 5">Оставить коэффициентов</TextBlock>
+                <ComboBox Grid.Row="5" Grid.Column="1" MinWidth="120" Margin="0 0 5 5" Padding="5" 
                           SelectedValue="{Binding CoeffCount, Converter={StaticResource EnumConverter},  ConverterParameter={x:Type viewModels:СoeffCount}}"
                           ItemsSource="{Binding Source={viewModels:EnumToItemsSource {x:Type viewModels:СoeffCount}}}" />
 
                 <TextBlock ToolTip="Округление используется на последнем шаге" MinWidth="150" Grid.Row="3" Grid.Column="0" Margin="0 0 5 5">Округление</TextBlock>
                 <TextBox ToolTip="Минимальное значение округления 1" Grid.Row="3" Grid.Column="1" MinWidth="50" Margin="0 0 5 5" Text="{Binding Rounding}"></TextBox>
 
-                <TextBlock ToolTip="Выбите тип вейвлета для преобразования" MinWidth="150" Grid.Row="4" Grid.Column="0" Margin="0 5 5 5">Тип вейвлета</TextBlock>
-                <ComboBox Grid.Row="4" Grid.Column="1" MinWidth="120" Margin="0 0 5 5" Padding="5" 
+                <TextBlock ToolTip="Выбите тип вейвлета для преобразования" MinWidth="150" Grid.Row="6" Grid.Column="0" Margin="0 5 5 5">Тип вейвлета</TextBlock>
+                <ComboBox Grid.Row="6" Grid.Column="1" MinWidth="120" Margin="0 0 5 5" Padding="5" 
                           SelectedValue="{Binding WvType, Converter={StaticResource EnumConverter},  ConverterParameter={x:Type alg:WaveletType}}"
                           ItemsSource="{Binding Source={viewModels:EnumToItemsSource {x:Type alg:WaveletType}}}" />
 
-                <TextBlock ToolTip="Показывает, сколько раз будет применено вейвлет преобразование" MinWidth="150" Grid.Row="5" Grid.Column="0" Margin="0 0 5 5">Глубина рекурсии вейвлета</TextBlock>
-                <TextBox Grid.Row="5" Grid.Column="1" MinWidth="50" Margin="0 0 5 5" Text="{Binding Depth}"></TextBox>
+                <TextBlock ToolTip="Показывает, сколько раз будет применено вейвлет преобразование" MinWidth="150" Grid.Row="2" Grid.Column="0" Margin="0 0 5 5">Глубина рекурсии вейвлета</TextBlock>
+                <TextBox Grid.Row="2" Grid.Column="1" MinWidth="50" Margin="0 0 5 5" Text="{Binding Depth}"></TextBox>
 
-                <TextBlock ToolTip="Число коэффициентов которые не будут кодироваться при использовании алгоритма RLE" MinWidth="150" Grid.Row="6" Grid.Column="0" Margin="0 0 5 5">Коэффициентов НЕ кодировать RLE</TextBlock>
-                <TextBox ToolTip="Минимум 0, максимум это 2^(глубина +1)" Grid.Row="6" Grid.Column="1" MinWidth="50" Margin="0 0 5 5" Text="{Binding RleCount}"></TextBox>
+                <TextBlock ToolTip="Число коэффициентов которые не будут кодироваться при использовании алгоритма RLE" MinWidth="150" Grid.Row="4" Grid.Column="0" Margin="0 0 5 5">Коэффициентов НЕ кодировать RLE</TextBlock>
+                <TextBox ToolTip="Минимум 0, максимум это 2^(глубина +1)" Grid.Row="4" Grid.Column="1" MinWidth="50" Margin="0 0 5 5" Text="{Binding RleCount}"></TextBox>
             </Grid>
 
 
@@ -80,7 +81,7 @@
         
         <DockPanel Grid.Column="0" LastChildFill="false">
             <StackPanel DockPanel.Dock="Bottom">
-                <ProgressBar x:Name="ProgressBar" Minimum="0" Maximum="1" Height="16" IsIndeterminate="True" Margin="0 10 10 10" Visibility="{Binding Path=PBar, IsAsync=True}"/>
+                <ProgressBar Minimum="0" Maximum="1" Height="16" IsIndeterminate="True" Margin="0 10 10 5" Visibility="{Binding PBar, IsAsync=True}"/>
                 <Button IsDefault="True" IsEnabled="{Binding ConvertIsEnabled}" Command="{Binding ConvertCommand}" Padding="5" Margin="0 10 10 10">Преобразовать</Button>
                 <Button IsEnabled="{Binding SaveIsEnabled}" Command="{Binding SaveCommand}" Padding="5" Margin="0 0 10 10">Сохранить в файл</Button>
             </StackPanel>
