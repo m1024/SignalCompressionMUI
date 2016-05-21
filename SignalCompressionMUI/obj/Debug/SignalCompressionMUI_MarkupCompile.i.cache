@@ -10,11 +10,11 @@ none
 false
 DEBUG;TRACE
 F:\Git\SignalCompressionMUI\SignalCompressionMUI\App.xaml
-10-333469946
+121634506228
 1-1767438219
-451231283711
-17-352152037
-Views\DCTView.xaml;Views\GraphView.xaml;Views\MainWindowView.xaml;Views\RDPView.xaml;Views\Settings\About.xaml;Views\Settings\Appearance.xaml;Views\Settings\SettingsPage.xaml;Views\WaveletView.xaml;Views\ZedGraphSpectrumView.xaml;Views\ZedGraphView.xaml;
+4950377335
+1946615890
+Views\DCTView.xaml;Views\GraphView.xaml;Views\MainWindowView.xaml;Views\ModernChartsView.xaml;Views\OxyPlotView.xaml;Views\RDPView.xaml;Views\Settings\About.xaml;Views\Settings\Appearance.xaml;Views\Settings\SettingsPage.xaml;Views\WaveletView.xaml;Views\ZedGraphSpectrumView.xaml;Views\ZedGraphView.xaml;
 
-True
+False
 

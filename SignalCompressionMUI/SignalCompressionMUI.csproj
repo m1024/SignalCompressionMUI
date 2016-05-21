@@ -31,8 +31,17 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="De.TorstenMandelkow.MetroChart, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\ModernUICharts.1.0.2\lib\De.TorstenMandelkow.MetroChart.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="FirstFloor.ModernUI, Version=1.0.9.0, Culture=neutral, PublicKeyToken=bc9b0c37bf06c6a9, processorArchitecture=MSIL">
       <HintPath>..\packages\ModernUI.WPF.1.0.9\lib\net45\FirstFloor.ModernUI.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Microsoft.Office.Interop.Excel, Version=15.0.0.0, Culture=neutral, PublicKeyToken=71e9bce111e9429c, processorArchitecture=MSIL">
+      <EmbedInteropTypes>True</EmbedInteropTypes>
+      <HintPath>..\packages\Microsoft.Office.Interop.Excel.15.0.4795.1000\lib\net20\Microsoft.Office.Interop.Excel.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="System" />
@@ -83,9 +92,14 @@
     <Compile Include="ViewModels\AsyncDelegateCommand.cs" />
     <Compile Include="ViewModels\DCTViewModel.cs" />
     <Compile Include="ViewModels\EnumHelper.cs" />
+    <Compile Include="ViewModels\ModernChartsViewModel.cs" />
+    <Compile Include="ViewModels\Population.cs" />
     <Compile Include="ViewModels\WaveletViewModel.cs" />
     <Compile Include="Views\DCTView.xaml.cs">
       <DependentUpon>DCTView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Views\ModernChartsView.xaml.cs">
+      <DependentUpon>ModernChartsView.xaml</DependentUpon>
     </Compile>
     <Compile Include="Views\WaveletView.xaml.cs">
       <DependentUpon>WaveletView.xaml</DependentUpon>
@@ -124,6 +138,10 @@
       <DependentUpon>MainWindowView.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
+    <Page Include="Views\ModernChartsView.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="Views\RDPView.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>

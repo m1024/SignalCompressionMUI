@@ -2,12 +2,14 @@
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
+using System.Linq;
 using System.Windows;
 using System.Windows.Input;
 using FirstFloor.ModernUI.Windows.Controls;
 using SignalCompressionMUI.Models;
 using SignalCompressionMUI.Models.Algorithms;
 using SignalCompressionMUI.Views;
+using Excel = Microsoft.Office.Interop.Excel;
 
 namespace SignalCompressionMUI.ViewModels
 {
@@ -45,7 +47,20 @@ namespace SignalCompressionMUI.ViewModels
         private bool _compressTypeRiseHuffman;
         private bool _saveIsEnabled;
         private bool _convertIsEnabled;
+        private Visibility _statVisiblity;
+        private bool _isStatExist;
         private BackgroundWorker _worker;
+        private BackgroundWorker _worker2;
+
+        public bool IsStatExist
+        {
+            get { return _isStatExist; }
+            set
+            {
+                _isStatExist = value;
+                OnPropertyChanged("IsStatExist");
+            }
+        }
 
         public СoeffCount CoeffCount
         {
@@ -140,12 +155,32 @@ namespace SignalCompressionMUI.ViewModels
             }
         }
 
+        public Visibility StatVisibility
+        {
+            get { return _statVisiblity;}
+            set
+            {
+                _statVisiblity = value;
+                OnPropertyChanged("StatVisibility");
+            }
+        }
+
         public List<Statistic> StatisticTable
         {
             get { return _statisticTable; }
             set
             {
                 _statisticTable = value;
+                if (_statisticTable == null)
+                {
+                    StatVisibility = Visibility.Hidden;
+                    IsStatExist = false;
+                }
+                else
+                {
+                    StatVisibility = Visibility.Visible;
+                    IsStatExist = true;
+                }
                 OnPropertyChanged("StatisticTable");
             }
         }
@@ -228,6 +263,7 @@ namespace SignalCompressionMUI.ViewModels
 
         public WaveletViewModel()
         {
+            StatisticTable = null;
             _worker = new BackgroundWorker()
             {
                 WorkerReportsProgress = true,
@@ -237,12 +273,21 @@ namespace SignalCompressionMUI.ViewModels
            // _worker.ProgressChanged += worker_ProgressChanged;
             _worker.RunWorkerCompleted += worker_RunWorkerCompleted;
 
+            _worker2 = new BackgroundWorker()
+            {
+                WorkerReportsProgress = true,
+                WorkerSupportsCancellation = true
+            };
+            _worker2.DoWork += worker2_DoWork;
+            _worker2.RunWorkerCompleted += worker2_RunWorkerCompleted;
+
             WaveletModel.OnCompressComplete += CompressedComplete;
             WaveletModel.OnSourseParsingComplete += ParsingSourseComplete;
             OpenFileCommand = new RelayCommand(arg => OpenFile());
             //ConvertCommand = new RelayCommand(arg => Convert());
             ConvertCommand = new RelayCommand(arg => ConvertAssync());
             SaveCommand = new RelayCommand(arg => SaveFile());
+            OpenInExcelCommand = new RelayCommand(arg => OpenInExcel());
             CompressTypeNothing = true;
             PBar = Visibility.Hidden;
             CoeffCount = СoeffCount.All;
@@ -256,6 +301,8 @@ namespace SignalCompressionMUI.ViewModels
 
         public ICommand SaveCommand { get; set; }
 
+        public ICommand OpenInExcelCommand { get; set; }
+
         #endregion
 
         #region Methods
@@ -266,6 +313,31 @@ namespace SignalCompressionMUI.ViewModels
             if (!_worker.IsBusy)
                 _worker.RunWorkerAsync(this);
         }
+
+        private void OpenAssync()
+        {
+            PBar = Visibility.Visible;
+            if (!_worker2.IsBusy)
+                _worker2.RunWorkerAsync(this);
+        }
+
+        private void worker2_DoWork(object sender, DoWorkEventArgs e)
+        {
+            var input = (WaveletViewModel)e.Argument;
+            WaveletModel.CompressedFromFile = AccessoryFunc.ReadFile(input.FileName);
+            input.DecompressFile();
+            e.Result = input;
+        }
+
+        private void worker2_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
+        {
+            if (e.Error != null)
+                // Ошибка была сгенерирована обработчиком события DoWork
+                ModernDialog.ShowMessage(e.Error.Message, "Ошибка", MessageBoxButton.OK);
+            else
+                PBar = Visibility.Hidden;
+        }
+
         private void worker_DoWork(object sender, DoWorkEventArgs e)
         {
             var input = (WaveletViewModel)e.Argument;
@@ -276,15 +348,10 @@ namespace SignalCompressionMUI.ViewModels
         private void worker_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
         {
             if (e.Error != null)
-            {
                 // Ошибка была сгенерирована обработчиком события DoWork
-                MessageBox.Show(e.Error.Message, "Произошла ошибка");
-            }
+                ModernDialog.ShowMessage(e.Error.Message, "Ошибка", MessageBoxButton.OK);
             else
-            {
-                var wvm = (WaveletViewModel) e.Result;
                 PBar = Visibility.Hidden;
-            }
         }
 
         private void ParsingSourseComplete()
@@ -307,6 +374,10 @@ namespace SignalCompressionMUI.ViewModels
                 {
                     StatisticTable = stat;
                     WaveletModel.Deconvert(_wvType, CoeffCount, Rounding);
+
+                    Statistic.CalculateError(WaveletModel.SequenceSourse, WaveletModel.SequenceSmoothed, ref stat, BlockSize);
+                    stat.Insert(0, Statistic.CalculateTotal(stat));
+                    StatisticTable = stat;
                     break;
                 }
                 case CompressType.Rise:  
@@ -483,8 +554,9 @@ namespace SignalCompressionMUI.ViewModels
             WaveletModel.Compressed = null;
             if (ext == ".emgwv")
             {
-                WaveletModel.CompressedFromFile = AccessoryFunc.ReadFile(FileName);
-                DecompressFile();
+                OpenAssync();
+                //WaveletModel.CompressedFromFile = AccessoryFunc.ReadFile(FileName);
+                //DecompressFile();
             }
             else if (ext == ".txt")
             {
@@ -511,6 +583,37 @@ namespace SignalCompressionMUI.ViewModels
                 {
                     var decoded = WaveletModel.DecodeRise(dec);
                     WaveletModel.ConvertedBlocks = decoded;
+                    WaveletModel.Deconvert(_wvType, CoeffCount, Rounding);
+                    break;
+                }
+                case CompressType.Rle:
+                {
+                    var decoded = WaveletModel.DecodeRle(dec);
+                    WaveletModel.ConvertedBlocks = decoded;
+                    WaveletModel.Deconvert(_wvType, CoeffCount, Rounding);
+                    break;
+                }
+                case CompressType.RiseRle:
+                {
+                    var decoded = WaveletModel.DecodeRise(dec);
+                    var decRle = WaveletModel.DecodeRleShort(decoded, RleCount);
+
+                    WaveletModel.ConvertedBlocks = decRle;
+                    WaveletModel.Deconvert(_wvType, CoeffCount, Rounding);
+                    break;
+                }
+                case CompressType.Huffman:
+                {
+                    var decoded = WaveletModel.DecodeHuffman(dec);
+                    WaveletModel.ConvertedBlocks = decoded;
+                    WaveletModel.Deconvert(_wvType, CoeffCount, Rounding);
+                    break;
+                }
+                case CompressType.RiseHuffman:
+                {
+                    var decHuff = WaveletModel.DecodeHuffman(dec);
+                    var decRise = WaveletModel.DecodeRleShort(decHuff, RleCount);
+                    WaveletModel.ConvertedBlocks = decRise;
                     WaveletModel.Deconvert(_wvType, CoeffCount, Rounding);
                     break;
                 }
@@ -551,6 +654,70 @@ namespace SignalCompressionMUI.ViewModels
                     ModernDialog.ShowMessage(ex.Message, "Результат операции", MessageBoxButton.OK);
                 }
             }
+        }
+
+        private void OpenInExcel()
+        {
+            var excelApp = new Microsoft.Office.Interop.Excel.Application();
+            excelApp.Application.Workbooks.Add(Type.Missing);
+            excelApp.Columns.ColumnWidth = 15;
+
+            var sheet = (Excel.Worksheet)excelApp.ActiveSheet;
+
+            sheet.Range[sheet.Cells[2, 1], sheet.Cells[2, 5]].Merge(Type.Missing);
+            sheet.Cells[2, 1] = "Статистика вейвлет преобразования";
+            (sheet.Cells[2, 1] as Excel.Range).Font.Bold = true;
+            (sheet.Cells[2, 1] as Excel.Range).Font.Size = 16;
+
+            for (int i = 4; i < 11; i++)
+            {
+                sheet.Range[sheet.Cells[i, 1], sheet.Cells[i, 2]].Merge(Type.Missing);
+                (sheet.Cells[i, 3] as Excel.Range).HorizontalAlignment = Excel.XlHAlign.xlHAlignRight;
+            }
+
+            sheet.Cells[4, 1] = "Длина блока";
+            sheet.Cells[4, 3] = BlockSize;
+            sheet.Cells[5, 1] = "Глубина рекурсии вейвлета";
+            sheet.Cells[5, 3] = Depth;
+            sheet.Cells[6, 1] = "Округление";
+            sheet.Cells[6, 3] = Rounding;
+            sheet.Cells[7, 1] = "Коэф. не кодированных rle";
+            sheet.Cells[7, 3] = RleCount;
+            sheet.Cells[8, 1] = "Оставить коэффициентов";
+            sheet.Cells[8, 3] = CoeffCount.ToString();
+            sheet.Cells[9, 1] = "Тип вейвлета";
+            sheet.Cells[9, 3] = WvType.ToString();
+            sheet.Cells[10, 1] = "Метод сжатия";
+            sheet.Cells[10, 3] = CompressionType.ToString();
+
+
+            sheet.Range[sheet.Cells[12, 1], sheet.Cells[12, 6]].WrapText = true;
+            sheet.Range[sheet.Cells[12, 1], sheet.Cells[12, 6]].HorizontalAlignment = Excel.XlHAlign.xlHAlignCenter;
+            //for (int i = 1; i < 7; i++)
+            //{
+            //    (sheet.Cells[12, i] as Excel.Range).WrapText = true;
+            //    (sheet.Cells[12, i] as Excel.Range).HorizontalAlignment = Excel.XlHAlign.xlHAlignCenter;
+            //}
+            sheet.Range[sheet.Cells[12, 1], sheet.Cells[12, 6]].Font.Bold = true;
+            sheet.Cells[12, 1] = "Номер";
+            sheet.Cells[12, 2] = "Время (Ticks)";
+            sheet.Cells[12, 3] = "Размер исходного блока (bytes)";
+            sheet.Cells[12, 4] = "Размер нового блока (bytes)";
+            sheet.Cells[12, 5] = "Коэффициент сжатия";
+            sheet.Cells[12, 6] = "Суммарная погрешность";
+
+            for (int i = 0; i < StatisticTable.Count; i++)
+            {
+                sheet.Range[sheet.Cells[i+13, 1], sheet.Cells[i+13, 6]].HorizontalAlignment = Excel.XlHAlign.xlHAlignCenter;
+                sheet.Cells[i + 13, 1] = StatisticTable[i].Title;
+                sheet.Cells[i + 13, 2] = StatisticTable[i].Time.Ticks;
+                sheet.Cells[i + 13, 3] = StatisticTable[i].BlockSourseSize;
+                sheet.Cells[i + 13, 4] = StatisticTable[i].BlockRezultSize;
+                sheet.Cells[i + 13, 5] = StatisticTable[i].CompressionRatio;
+                sheet.Cells[i + 13, 6] = StatisticTable[i].Error;
+            }
+
+            excelApp.Visible = true;
         }
 
         #endregion

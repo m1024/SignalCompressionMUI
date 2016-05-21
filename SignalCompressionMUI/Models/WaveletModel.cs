@@ -531,6 +531,8 @@ namespace SignalCompressionMUI.Models
 
                 #region замеры
                 swatch.Stop();
+                blockstat.Number = statistic.Count;
+                blockstat.Title = statistic.Count.ToString();
                 blockstat.BlockSourseSize = blockSize*2;
                 blockstat.BlockRezultSize = convBlock.Count*convBlock[0].Count*2;
                 blockstat.Time = swatch.Elapsed;

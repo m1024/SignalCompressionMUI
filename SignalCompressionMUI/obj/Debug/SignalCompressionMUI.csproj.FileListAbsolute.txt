@@ -70,3 +70,6 @@ F:\Git\SignalCompressionMUI\SignalCompressionMUI\obj\Debug\Views\WaveletView.bam
 F:\Git\SignalCompressionMUI\SignalCompressionMUI\obj\Debug\Views\WaveletView.g.cs
 F:\Git\SignalCompressionMUI\SignalCompressionMUI\obj\Debug\GeneratedInternalTypeHelper.g.cs
 F:\Git\SignalCompressionMUI\SignalCompressionMUI\obj\Debug\SignalCompressionMUI_MarkupCompile.lref
+F:\Git\SignalCompressionMUI\SignalCompressionMUI\bin\Debug\De.TorstenMandelkow.MetroChart.dll
+F:\Git\SignalCompressionMUI\SignalCompressionMUI\obj\Debug\Views\ModernChartsView.baml
+F:\Git\SignalCompressionMUI\SignalCompressionMUI\obj\Debug\Views\ModernChartsView.g.cs

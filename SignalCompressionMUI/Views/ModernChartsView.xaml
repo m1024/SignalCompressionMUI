@@ -1,0 +1,24 @@
+﻿<UserControl x:Class="SignalCompressionMUI.Views.ModernChartsView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:mui="http://firstfloorsoftware.com/ModernUI"
+             mc:Ignorable="d" 
+             xmlns:chart="using:De.TorstenMandelkow.MetroChart"
+             xmlns:metroChart="clr-namespace:De.TorstenMandelkow.MetroChart;assembly=De.TorstenMandelkow.MetroChart"
+             d:DesignHeight="300" d:DesignWidth="300">
+    <Grid Style="{StaticResource ContentRoot}">
+        <metroChart:PieChart ChartSubTitle="Population in millions" ChartTitle="Countries by population" Width="500" Height="500">
+            <metroChart:PieChart.Series>
+                <metroChart:ChartSeries DisplayMember="Name"
+                       ItemsSource="{Binding Path=Populations}"
+                       ValueMember="Count" />
+
+                <metroChart:ChartSeries DisplayMember="Name"
+                       ItemsSource="{Binding Path=SmallestPopulations}"
+                       ValueMember="Count" />
+            </metroChart:PieChart.Series>
+        </metroChart:PieChart>
+    </Grid>
+</UserControl>
