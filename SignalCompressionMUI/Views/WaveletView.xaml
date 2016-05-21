@@ -101,10 +101,10 @@
                         <mui:ModernButton IconData="{StaticResource ConvertIcon}" EllipseDiameter="50" EllipseStrokeThickness="2" IconWidth="30" IconHeight="30"></mui:ModernButton>
                     </WrapPanel>-->
                     <WrapPanel HorizontalAlignment="Center" Grid.Column="0">
-                        <mui:ModernButton IsEnabled="{Binding SaveIsEnabled}" Command="{Binding SaveCommand}" IconData="{StaticResource SaveIcon}" EllipseDiameter="30" IconWidth="18" IconHeight="18">Сигнал</mui:ModernButton>
+                        <mui:ModernButton IsEnabled="{Binding SaveIsEnabled}" Command="{Binding SaveCommand}" IconData="{StaticResource SaveIcon}" EllipseDiameter="30" IconWidth="18" IconHeight="18">Сохранить сжатый сигнал</mui:ModernButton>
                     </WrapPanel>
                     <WrapPanel HorizontalAlignment="Center" Grid.Column="1">
-                        <mui:ModernButton IsEnabled="{Binding IsStatExist}" Command="{Binding OpenInExcelCommand}" IconData="{StaticResource ExcelIcon}" EllipseDiameter="30" IconWidth="18" IconHeight="18">Статистика</mui:ModernButton>
+                        <mui:ModernButton IsEnabled="{Binding IsStatExist}" Command="{Binding OpenInExcelCommand}" IconData="{StaticResource ExcelIcon}" EllipseDiameter="30" IconWidth="18" IconHeight="18">Выгрузить статистику</mui:ModernButton>
                     </WrapPanel>
                 </Grid>
                 <Button IsDefault="True" IsEnabled="{Binding ConvertIsEnabled}" Command="{Binding ConvertCommand}" Padding="5" Margin="0 15 10 10">Преобразовать</Button>

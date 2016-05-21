@@ -8,6 +8,7 @@ using System.Windows.Input;
 using FirstFloor.ModernUI.Windows.Controls;
 using SignalCompressionMUI.Models;
 using SignalCompressionMUI.Models.Algorithms;
+using SignalCompressionMUI.Models.Algorithms.Spectrum;
 using SignalCompressionMUI.Views;
 using Excel = Microsoft.Office.Interop.Excel;
 
@@ -51,6 +52,7 @@ namespace SignalCompressionMUI.ViewModels
         private bool _isStatExist;
         private BackgroundWorker _worker;
         private BackgroundWorker _worker2;
+        private BackgroundWorker _bwExcel;
 
         public bool IsStatExist
         {
@@ -81,6 +83,7 @@ namespace SignalCompressionMUI.ViewModels
                 OnPropertyChanged("WvType");
             }
         }
+
         public bool SaveIsEnabled
         {
             get { return _saveIsEnabled; }
@@ -281,13 +284,21 @@ namespace SignalCompressionMUI.ViewModels
             _worker2.DoWork += worker2_DoWork;
             _worker2.RunWorkerCompleted += worker2_RunWorkerCompleted;
 
+            _bwExcel = new BackgroundWorker()
+            {
+                WorkerReportsProgress = true,
+                WorkerSupportsCancellation = true
+            };
+            _bwExcel.DoWork += bwExcel_DoWork;
+            _bwExcel.RunWorkerCompleted += bwExcel_RunWorkerCompleted;
+
             WaveletModel.OnCompressComplete += CompressedComplete;
             WaveletModel.OnSourseParsingComplete += ParsingSourseComplete;
+
             OpenFileCommand = new RelayCommand(arg => OpenFile());
-            //ConvertCommand = new RelayCommand(arg => Convert());
             ConvertCommand = new RelayCommand(arg => ConvertAssync());
             SaveCommand = new RelayCommand(arg => SaveFile());
-            OpenInExcelCommand = new RelayCommand(arg => OpenInExcel());
+            OpenInExcelCommand = new RelayCommand(arg => OpenInExcelAssync());
             CompressTypeNothing = true;
             PBar = Visibility.Hidden;
             CoeffCount = СoeffCount.All;
@@ -321,6 +332,13 @@ namespace SignalCompressionMUI.ViewModels
                 _worker2.RunWorkerAsync(this);
         }
 
+        private void OpenInExcelAssync()
+        {
+            PBar = Visibility.Visible;
+            if (!_bwExcel.IsBusy)
+                _bwExcel.RunWorkerAsync(this);
+        }
+
         private void worker2_DoWork(object sender, DoWorkEventArgs e)
         {
             var input = (WaveletViewModel)e.Argument;
@@ -346,6 +364,22 @@ namespace SignalCompressionMUI.ViewModels
         }
 
         private void worker_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
+        {
+            if (e.Error != null)
+                // Ошибка была сгенерирована обработчиком события DoWork
+                ModernDialog.ShowMessage(e.Error.Message, "Ошибка", MessageBoxButton.OK);
+            else
+                PBar = Visibility.Hidden;
+        }
+
+        private void bwExcel_DoWork(object sender, DoWorkEventArgs e)
+        {
+            var input = (WaveletViewModel)e.Argument;
+            input.OpenInExcel();
+            e.Result = input;
+        }
+
+        private void bwExcel_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
         {
             if (e.Error != null)
                 // Ошибка была сгенерирована обработчиком события DoWork
@@ -521,13 +555,22 @@ namespace SignalCompressionMUI.ViewModels
                 }
             }
 
+            var sourseSpectrum = Spectrum.CalculateSpectrum(WaveletModel.SequenceSourse);
+            var newSpectrum = Spectrum.CalculateSpectrum(WaveletModel.SequenceSmoothed);
+
+            OxyPlotModel.SequenceSourse = WaveletModel.SequenceSourse;
+            OxyPlotModel.SequenceNew = WaveletModel.SequenceSmoothed;
+
+            OxyPlotSpectrumModel.SpectrumSourse = sourseSpectrum;
+            OxyPlotSpectrumModel.SpectrumNew = newSpectrum;
+
             ZedGraphView.CurveSourse = ZedGraphView.ListToPointList(WaveletModel.SequenceSourse);
             ZedGraphView.CurveNew = ZedGraphView.ListToPointList(WaveletModel.SequenceSmoothed);
 
             ZedGraphSpectrumView.SpectrumSourse =
-                ZedGraphSpectrumView.ArrayToPointList(ZedGraphSpectrumView.CalculateSpectrum(WaveletModel.SequenceSourse));
+                ZedGraphSpectrumView.ArrayToPointList(sourseSpectrum);
             ZedGraphSpectrumView.SpectrumNew =
-                ZedGraphSpectrumView.ArrayToPointList(ZedGraphSpectrumView.CalculateSpectrum(WaveletModel.SequenceSmoothed));
+                ZedGraphSpectrumView.ArrayToPointList(newSpectrum);
         }
 
         private void OpenFile()

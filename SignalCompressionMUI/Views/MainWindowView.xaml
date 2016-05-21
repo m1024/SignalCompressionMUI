@@ -11,14 +11,15 @@
                 <mui:Link DisplayName="Ramer-Douglas-Peucker" Source="/Views/RDPView.xaml" />
                 <mui:Link DisplayName="Discrete cosine transform" Source="/Views/DCTView.xaml" />
                 <mui:Link DisplayName="Wavelet" Source="/Views/WaveletView.xaml" />
-                <mui:Link DisplayName="Page" Source="/Views/ModernChartsView.xaml" />
             </mui:LinkGroup.Links>
         </mui:LinkGroup>
         <mui:LinkGroup DisplayName="Graphs">
             <mui:LinkGroup.Links>
+                <mui:Link DisplayName="OxyPlot curves" Source="/Views/OxyPlotView.xaml" />
+                <mui:Link DisplayName="OxyPlot spectrum" Source="/Views/OxyPlotSpectrumView.xaml" />
                 <mui:Link DisplayName="ZedGraph curves" Source="/Views/ZedGraphView.xaml" />
                 <mui:Link DisplayName="ZedGraph spectrum" Source="/Views/ZedGraphSpectrumView.xaml" />
-                <mui:Link DisplayName="Custom Wpf" Source="/Views/GraphView.xaml" />
+                <mui:Link DisplayName="Charts" Source="/Views/ModernChartsView.xaml" />
             </mui:LinkGroup.Links>
         </mui:LinkGroup>
         <mui:LinkGroup DisplayName="Settings">

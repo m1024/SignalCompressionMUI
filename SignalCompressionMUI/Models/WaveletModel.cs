@@ -46,11 +46,9 @@ namespace SignalCompressionMUI.Models
         /// </summary>
         public static byte[] CompressedFromFile { get; set; }
 
-        public delegate void CompressedComplete();
-        public static event CompressedComplete OnCompressComplete;
-
-        public delegate void SourseParsingComplete();
-        public static event SourseParsingComplete OnSourseParsingComplete;
+        public delegate void Complete();
+        public static event Complete OnCompressComplete;
+        public static event Complete OnSourseParsingComplete;
 
         public static void Read(string path)
         {

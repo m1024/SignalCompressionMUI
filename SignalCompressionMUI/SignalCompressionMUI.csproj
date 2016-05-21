@@ -44,6 +44,18 @@
       <HintPath>..\packages\Microsoft.Office.Interop.Excel.15.0.4795.1000\lib\net20\Microsoft.Office.Interop.Excel.dll</HintPath>
       <Private>True</Private>
     </Reference>
+    <Reference Include="OxyPlot, Version=1.0.0.0, Culture=neutral, PublicKeyToken=638079a8f0bd61e9, processorArchitecture=MSIL">
+      <HintPath>..\packages\OxyPlot.Core.1.0.0-unstable2100\lib\net45\OxyPlot.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="OxyPlot.Wpf, Version=1.0.0.0, Culture=neutral, PublicKeyToken=75e952ba404cdbb0, processorArchitecture=MSIL">
+      <HintPath>..\packages\OxyPlot.Wpf.1.0.0-unstable2100\lib\net45\OxyPlot.Wpf.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="OxyPlot.Xps, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\OxyPlot.Wpf.1.0.0-unstable2100\lib\net45\OxyPlot.Xps.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Data" />
     <Reference Include="System.Drawing" />
@@ -86,6 +98,8 @@
     <Compile Include="Models\Algorithms\Spectrum\FFT.cs" />
     <Compile Include="Models\Algorithms\Spectrum\Spectrum.cs" />
     <Compile Include="Models\DCTModel.cs" />
+    <Compile Include="Models\OxyPlotModel.cs" />
+    <Compile Include="Models\OxyPlotSpectrumModel.cs" />
     <Compile Include="Models\WaveletArray.cs" />
     <Compile Include="Models\WaveletModel.cs" />
     <Compile Include="Models\WaveletTree.cs" />
@@ -93,6 +107,8 @@
     <Compile Include="ViewModels\DCTViewModel.cs" />
     <Compile Include="ViewModels\EnumHelper.cs" />
     <Compile Include="ViewModels\ModernChartsViewModel.cs" />
+    <Compile Include="ViewModels\OxyPlotSpectrumViewModel.cs" />
+    <Compile Include="ViewModels\OxyPlotViewModel.cs" />
     <Compile Include="ViewModels\Population.cs" />
     <Compile Include="ViewModels\WaveletViewModel.cs" />
     <Compile Include="Views\DCTView.xaml.cs">
@@ -100,6 +116,12 @@
     </Compile>
     <Compile Include="Views\ModernChartsView.xaml.cs">
       <DependentUpon>ModernChartsView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Views\OxyPlotSpectrumView.xaml.cs">
+      <DependentUpon>OxyPlotSpectrumView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Views\OxyPlotView.xaml.cs">
+      <DependentUpon>OxyPlotView.xaml</DependentUpon>
     </Compile>
     <Compile Include="Views\WaveletView.xaml.cs">
       <DependentUpon>WaveletView.xaml</DependentUpon>
@@ -139,6 +161,14 @@
       <SubType>Code</SubType>
     </Compile>
     <Page Include="Views\ModernChartsView.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Views\OxyPlotSpectrumView.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Views\OxyPlotView.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

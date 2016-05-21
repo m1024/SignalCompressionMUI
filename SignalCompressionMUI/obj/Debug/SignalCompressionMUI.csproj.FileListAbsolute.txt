@@ -73,3 +73,16 @@ F:\Git\SignalCompressionMUI\SignalCompressionMUI\obj\Debug\SignalCompressionMUI_
 F:\Git\SignalCompressionMUI\SignalCompressionMUI\bin\Debug\De.TorstenMandelkow.MetroChart.dll
 F:\Git\SignalCompressionMUI\SignalCompressionMUI\obj\Debug\Views\ModernChartsView.baml
 F:\Git\SignalCompressionMUI\SignalCompressionMUI\obj\Debug\Views\ModernChartsView.g.cs
+F:\Git\SignalCompressionMUI\SignalCompressionMUI\bin\Debug\OxyPlot.dll
+F:\Git\SignalCompressionMUI\SignalCompressionMUI\bin\Debug\OxyPlot.Wpf.dll
+F:\Git\SignalCompressionMUI\SignalCompressionMUI\bin\Debug\OxyPlot.Xps.dll
+F:\Git\SignalCompressionMUI\SignalCompressionMUI\bin\Debug\OxyPlot.pdb
+F:\Git\SignalCompressionMUI\SignalCompressionMUI\bin\Debug\OxyPlot.xml
+F:\Git\SignalCompressionMUI\SignalCompressionMUI\bin\Debug\OxyPlot.Wpf.pdb
+F:\Git\SignalCompressionMUI\SignalCompressionMUI\bin\Debug\OxyPlot.Wpf.xml
+F:\Git\SignalCompressionMUI\SignalCompressionMUI\bin\Debug\OxyPlot.Xps.pdb
+F:\Git\SignalCompressionMUI\SignalCompressionMUI\bin\Debug\OxyPlot.Xps.xml
+F:\Git\SignalCompressionMUI\SignalCompressionMUI\obj\Debug\Views\OxyPlotView.baml
+F:\Git\SignalCompressionMUI\SignalCompressionMUI\obj\Debug\Views\OxyPlotView.g.cs
+F:\Git\SignalCompressionMUI\SignalCompressionMUI\obj\Debug\Views\OxyPlotSpectrumView.g.cs
+F:\Git\SignalCompressionMUI\SignalCompressionMUI\obj\Debug\Views\OxyPlotSpectrumView.baml
