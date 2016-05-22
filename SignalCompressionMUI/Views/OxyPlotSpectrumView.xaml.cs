@@ -5,6 +5,7 @@ using System.Windows.Controls;
 using FirstFloor.ModernUI.Windows.Controls;
 using OxyPlot;
 using OxyPlot.Wpf;
+using SignalCompressionMUI.ViewModels;
 
 namespace SignalCompressionMUI.Views
 {
@@ -13,9 +14,12 @@ namespace SignalCompressionMUI.Views
     /// </summary>
     public partial class OxyPlotSpectrumView : UserControl
     {
+        private OxyPlotSpectrumViewModel _vm;
+
         public OxyPlotSpectrumView()
         {
             InitializeComponent();
+            _vm = (OxyPlotSpectrumViewModel)Resources["Vm"];
         }
 
         private void ToPdf()
@@ -130,6 +134,20 @@ namespace SignalCompressionMUI.Views
         private void ToSvg_OnClick(object sender, RoutedEventArgs e)
         {
             ToSvg();
+        }
+
+        private void SourseGraph_OnClick(object sender, RoutedEventArgs e)
+        {
+            if (_vm == null) return;
+            var s = (ModernToggleButton)sender;
+            SourseLineSeries.ItemsSource = s.IsChecked == true ? _vm.SpectrumSourse : null;
+        }
+
+        private void NewGraph_OnClick(object sender, RoutedEventArgs e)
+        {
+            if (_vm == null) return;
+            var s = (ModernToggleButton)sender;
+            NewLineSeries.ItemsSource = s.IsChecked == true ? _vm.SpectrumNew : null;
         }
     }
 }

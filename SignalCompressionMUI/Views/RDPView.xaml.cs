@@ -11,7 +11,6 @@ namespace SignalCompressionMUI.Views
         public RDPView()
         {
             InitializeComponent();
-            DataContext = new RDPViewModel();
         }
     }
 }

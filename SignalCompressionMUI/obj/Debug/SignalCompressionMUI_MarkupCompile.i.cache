@@ -16,5 +16,5 @@ F:\Git\SignalCompressionMUI\SignalCompressionMUI\App.xaml
 73-706102099
 Views\DCTView.xaml;Views\GraphView.xaml;Views\MainWindowView.xaml;Views\ModernChartsView.xaml;Views\OxyPlotSpectrumView.xaml;Views\OxyPlotView.xaml;Views\RDPView.xaml;Views\Settings\About.xaml;Views\Settings\Appearance.xaml;Views\Settings\SettingsPage.xaml;Views\WaveletView.xaml;Views\ZedGraphSpectrumView.xaml;Views\ZedGraphView.xaml;
 
-False
+True
 

@@ -210,7 +210,6 @@ namespace SignalCompressionMUI.ViewModels
                 OnPropertyChanged("CompressTypeNothing");
             }
         }
-
         public bool CompressTypeRise
         {
             get { return _compressTypeRise; }
@@ -267,28 +266,15 @@ namespace SignalCompressionMUI.ViewModels
         public WaveletViewModel()
         {
             StatisticTable = null;
-            _worker = new BackgroundWorker()
-            {
-                WorkerReportsProgress = true,
-                WorkerSupportsCancellation = true
-            };
+            _worker = new BackgroundWorker();
             _worker.DoWork += worker_DoWork;
-           // _worker.ProgressChanged += worker_ProgressChanged;
             _worker.RunWorkerCompleted += worker_RunWorkerCompleted;
 
-            _worker2 = new BackgroundWorker()
-            {
-                WorkerReportsProgress = true,
-                WorkerSupportsCancellation = true
-            };
+            _worker2 = new BackgroundWorker();
             _worker2.DoWork += worker2_DoWork;
             _worker2.RunWorkerCompleted += worker2_RunWorkerCompleted;
 
-            _bwExcel = new BackgroundWorker()
-            {
-                WorkerReportsProgress = true,
-                WorkerSupportsCancellation = true
-            };
+            _bwExcel = new BackgroundWorker();
             _bwExcel.DoWork += bwExcel_DoWork;
             _bwExcel.RunWorkerCompleted += bwExcel_RunWorkerCompleted;
 
@@ -299,6 +285,7 @@ namespace SignalCompressionMUI.ViewModels
             ConvertCommand = new RelayCommand(arg => ConvertAssync());
             SaveCommand = new RelayCommand(arg => SaveFile());
             OpenInExcelCommand = new RelayCommand(arg => OpenInExcelAssync());
+
             CompressTypeNothing = true;
             PBar = Visibility.Hidden;
             CoeffCount = СoeffCount.All;
@@ -567,10 +554,8 @@ namespace SignalCompressionMUI.ViewModels
             ZedGraphView.CurveSourse = ZedGraphView.ListToPointList(WaveletModel.SequenceSourse);
             ZedGraphView.CurveNew = ZedGraphView.ListToPointList(WaveletModel.SequenceSmoothed);
 
-            ZedGraphSpectrumView.SpectrumSourse =
-                ZedGraphSpectrumView.ArrayToPointList(sourseSpectrum);
-            ZedGraphSpectrumView.SpectrumNew =
-                ZedGraphSpectrumView.ArrayToPointList(newSpectrum);
+            ZedGraphSpectrumView.SpectrumSourse = ZedGraphSpectrumView.ArrayToPointList(sourseSpectrum);
+            ZedGraphSpectrumView.SpectrumNew = ZedGraphSpectrumView.ArrayToPointList(newSpectrum);
         }
 
         private void OpenFile()
@@ -671,21 +656,18 @@ namespace SignalCompressionMUI.ViewModels
                 ZedGraphSpectrumView.ArrayToPointList(ZedGraphSpectrumView.CalculateSpectrum(WaveletModel.SequenceSmoothed));
         }
 
-        private void SaveFile()
+        private static void SaveFile()
         {
-            // Configure save file dialog box
-            Microsoft.Win32.SaveFileDialog dlg = new Microsoft.Win32.SaveFileDialog();
-            dlg.FileName = "Compressed signal"; // Default file name
-            dlg.DefaultExt = ".emgwv"; // Default file extension
-            dlg.Filter = "Emg compress files (.emgwv)|*.emgwv"; // Filter files by extension
+            var dlg = new Microsoft.Win32.SaveFileDialog
+            {
+                FileName = "Compressed signal",
+                DefaultExt = ".emgwv",
+                Filter = "Emg compress files (.emgwv)|*.emgwv"
+            };
 
-            // Show save file dialog box
             var result = dlg.ShowDialog();
-
-            // Process save file dialog box results
             if (result == true)
             {
-                // Save document
                 string filename = dlg.FileName;
                 try
                 {
@@ -701,13 +683,13 @@ namespace SignalCompressionMUI.ViewModels
 
         private void OpenInExcel()
         {
-            var excelApp = new Microsoft.Office.Interop.Excel.Application();
+            var excelApp = new Excel.Application();
             excelApp.Application.Workbooks.Add(Type.Missing);
             excelApp.Columns.ColumnWidth = 15;
 
             var sheet = (Excel.Worksheet)excelApp.ActiveSheet;
 
-            sheet.Range[sheet.Cells[2, 1], sheet.Cells[2, 5]].Merge(Type.Missing);
+            sheet.Range[sheet.Cells[2, 1], sheet.Cells[2, 6]].Merge(Type.Missing);
             sheet.Cells[2, 1] = "Статистика вейвлет преобразования";
             (sheet.Cells[2, 1] as Excel.Range).Font.Bold = true;
             (sheet.Cells[2, 1] as Excel.Range).Font.Size = 16;
@@ -736,11 +718,7 @@ namespace SignalCompressionMUI.ViewModels
 
             sheet.Range[sheet.Cells[12, 1], sheet.Cells[12, 6]].WrapText = true;
             sheet.Range[sheet.Cells[12, 1], sheet.Cells[12, 6]].HorizontalAlignment = Excel.XlHAlign.xlHAlignCenter;
-            //for (int i = 1; i < 7; i++)
-            //{
-            //    (sheet.Cells[12, i] as Excel.Range).WrapText = true;
-            //    (sheet.Cells[12, i] as Excel.Range).HorizontalAlignment = Excel.XlHAlign.xlHAlignCenter;
-            //}
+
             sheet.Range[sheet.Cells[12, 1], sheet.Cells[12, 6]].Font.Bold = true;
             sheet.Cells[12, 1] = "Номер";
             sheet.Cells[12, 2] = "Время (Ticks)";
@@ -771,10 +749,7 @@ namespace SignalCompressionMUI.ViewModels
 
         protected virtual void OnPropertyChanged(string propertyName)
         {
-            if (PropertyChanged != null)
-            {
-                PropertyChanged(this, new PropertyChangedEventArgs(propertyName));
-            }
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
 
         #endregion

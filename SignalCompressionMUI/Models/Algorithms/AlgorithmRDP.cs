@@ -4,6 +4,12 @@
     {
         public long X { get; set; }
         public short Y { get; set; }
+
+        public MyPoint(long x, short y)
+        {
+            X = x;
+            Y = y;
+        }
     }
 
     public static class AlgorithmRDP

@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
+using System.Windows.Media;
 using OxyPlot;
 using SignalCompressionMUI.Models;
 
@@ -10,6 +11,17 @@ namespace SignalCompressionMUI.ViewModels
     {
         private List<DataPoint> _spectrumSourse;
         private List<DataPoint> _spectrumNew;
+        private Color _sourseColor = Color.FromRgb(0x1b, 0xa1, 0xe2);
+
+        public Color SourseColor
+        {
+            get { return _sourseColor; }
+            set
+            {
+                _sourseColor = value;
+                OnPropertyChanged("SourseColor");
+            }
+        }
 
         public List<DataPoint> SpectrumSourse
         {

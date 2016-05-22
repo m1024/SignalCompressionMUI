@@ -73,6 +73,23 @@ namespace SignalCompressionMUI.Models
         }
 
         /// <summary>
+        /// Разбиение последовательности на блоки
+        /// </summary>
+        public static List<MyPoint[]> DivideSequence(MyPoint[] sequense, int blockSize)
+        {
+            var rez = new List<MyPoint[]>();
+            for (int i = 0; i < sequense.Length; i += blockSize)
+            {
+                if (i + blockSize > sequense.Length)
+                    blockSize = sequense.Length - i; //т.к. последний блок может быть короче
+                var block = new MyPoint[blockSize];
+                Array.Copy(sequense, i, block, 0, blockSize);
+                rez.Add(block);
+            }
+            return rez;
+        }
+
+        /// <summary>
         /// Слияние блоков
         /// </summary>
         public static short[] ConcatSequence(List<short[]> sequence)

@@ -5,7 +5,31 @@ using SignalCompressionMUI.Models.Algorithms;
 
 namespace SignalCompressionMUI.Models
 {
-    class RDPModel
+    public struct MyPointLight
+    {
+        public byte X { get; set; }
+        public short Y { get; set; }
+
+        public MyPointLight(byte x, short y)
+        {
+            X = x;
+            Y = y;
+        }
+    }
+
+    public struct MyPointLightArray
+    {
+        public byte[] X;
+        public short[] Y;
+
+        public MyPointLightArray(byte[] x, short[] y)
+        {
+            X = x;
+            Y = y;
+        }
+    }
+
+    public static class RDPModel
     {
         public static MyPoint[] PRez;
         public static short[] SequenceSmoothed;
@@ -13,17 +37,248 @@ namespace SignalCompressionMUI.Models
         public static int MaxDeviationInd;
         public static int MinDeviationInd;
 
-        public List<Statistic> Stat = new List<Statistic>();
+        public static List<Statistic> Stat = new List<Statistic>();
 
-        public void Read(string path)
+        public static void Read(string path)
         {
             SequenceSourse = AccessoryFunc.ReadAndPrepare(path);
         }
 
+        public static List<MyPointLight[]> DeltaEncode(MyPoint[] myPoints, int blockSize)
+        {
+            var lightBlocks = new List<MyPointLight[]>();
+            var blocks = AccessoryFunc.DivideSequence(myPoints, blockSize);
+
+            foreach (var block in blocks)
+            {
+                var lightBlock = new List<MyPointLight> {new MyPointLight(0, block.First().Y)}; //блоками преобразовывалось, у первого элемента x = 1
+                var previous = block[0];
+
+                for (int i = 1; i < block.Length; i++)
+                {
+                    var pl = new MyPointLight((byte)(block[i].X - previous.X), block[i].Y);
+                    previous = block[i];
+                    lightBlock.Add(pl);
+                }
+                lightBlocks.Add(lightBlock.ToArray());
+            }
+
+            return lightBlocks;
+        }
+
+        public static MyPoint[] DeltaDecode(List<MyPointLight[]> lightPoints)
+        {
+            var blocks = new List<MyPoint>();
+
+            foreach (var lightBlock in lightPoints)
+            {
+                var previous = new MyPoint(0, lightBlock[0].Y);
+                var block = new List<MyPoint> {previous};
+
+                for (int i = 1; i < lightBlock.Length; i++)
+                {
+                    previous = new MyPoint(previous.X + lightBlock[i].X, lightBlock[i].Y);
+                    block.Add(previous);
+                }
+                blocks.AddRange(block);
+            }
+            return blocks.ToArray();
+        }
+
+
+        /// <summary>
+        /// С разделением на X и Y
+        /// </summary>
+        public static List<MyPointLightArray> DeltaEncodeCut(List<MyPoint[]> myPoints)
+        {
+            var lightBlocks = new List<MyPointLightArray>();
+
+            foreach (var block in myPoints)
+            {
+                var xcoord = new List<byte> {0};
+                var ycoord = new List<short> {block.First().Y};
+
+                var previous = block[0];
+
+                for (int i = 1; i < block.Length; i++)
+                {
+                    xcoord.Add((byte)(block[i].X - previous.X));
+                    ycoord.Add(block[i].Y);
+                    previous = block[i];
+                }
+                
+                var points = new MyPointLightArray(xcoord.ToArray(), ycoord.ToArray());
+                lightBlocks.Add(points);
+            }
+            return lightBlocks;
+        }
+
+        public static MyPoint[] ConcatMyPoints(List<MyPoint[]> data)
+        {
+            var res = new List<MyPoint>();
+            long firstX = 0;
+            foreach (var block in data)
+            {
+                for (int i = 0; i < block.Length; i++)
+                {
+                    res.Add(new MyPoint(block[i].X + firstX, block[i].Y));
+                }
+                firstX = res.Last().X+1;
+            }
+            return res.ToArray();
+        }
+
+        public static List<MyPoint[]> DeltaDecodedCut(List<MyPointLightArray> data)
+        {
+            var blocks = new List<MyPoint[]>();
+
+            foreach (var blocklight in data)
+            {
+                var xcoord = blocklight.X;
+                var ycoord = blocklight.Y;
+                var previous = new MyPoint(0, ycoord[0]);
+                var block = new List<MyPoint>() {previous};
+
+                for (int i = 0; i < xcoord.Length; i++)
+                {
+                    previous = new MyPoint(previous.X + xcoord[i], ycoord[i]);
+                    block.Add(previous);
+                }
+
+                blocks.Add(block.ToArray());
+            }
+            return blocks;
+        }
+
+        public static MyPoint[] ToMyPoints(short[] data) => data.Select((t, i) => new MyPoint(i, t)).ToArray();
+
+        public static short[] ToShorts(MyPoint[] data)
+        {
+            var previous = data[0];
+            var res = new List<short> {previous.Y};
+
+            for (int i = 1; i < data.Length; i++)
+            {
+                var current = data[i];
+                if (current.X - previous.X > 1)
+                {
+                    var deltaX = current.X - previous.X;
+                    var deltaY = current.Y - previous.Y;
+
+                    for (int j = 1; j < deltaX; j++)
+                        res.Add((short) ((double) deltaY/deltaX*j + previous.Y));
+                    res.Add(current.Y);
+                }
+                else
+                {
+                    res.Add(current.Y);
+                }
+                previous = current;
+            }
+
+            return res.ToArray();
+        }
+
+        public static short[] DeconvertRdp(List<MyPoint[]> data)
+        {
+            var sequence = new List<short>();
+            foreach (var block in data)
+            {
+                var b = ToShorts(block);
+                b = ToShorts(block).ToList().GetRange(1, b.Length - 1).ToArray();
+                sequence.AddRange(b);
+            }
+            return sequence.ToArray();
+        } 
+
+        public static List<MyPoint[]> ConvertRdp(out List<Statistic> stat, short[] data, int blockSize, int epsilon)
+        {
+            var blocksShort = AccessoryFunc.DivideSequence(data, blockSize);
+            var blocks = blocksShort.Select(ToMyPoints).ToList();
+            blocks.RemoveAt(blocks.Count - 1); //убрать последний
+            SequenceSourse = SequenceSourse.ToList().GetRange(0, (int) (SequenceSourse.Length/blockSize)*blockSize).ToArray(); //и в исходной
+            var newBlocks = new List<MyPoint[]>();
+
+            stat = new List<Statistic>();
+
+            foreach (var block in blocks)
+            {
+                var swatch = new System.Diagnostics.Stopwatch();
+                var st = new Statistic();
+
+                AlgorithmRDP.Additions = 0;
+                AlgorithmRDP.Multiplications = 0;
+                AlgorithmRDP.MaxCalls = 0;
+                AlgorithmRDP.Calls = 0;
+
+                swatch.Start(); // старт
+
+                var newBlock = AlgorithmRDP.DouglasPeucker(block, 0, block.Length-1, epsilon);
+
+                swatch.Stop();
+                st.Time = swatch.Elapsed;
+                st.BlockRezultLength = newBlock.Length;
+                st.BlockRezultSize = newBlock.Length*3;
+                st.Additions = AlgorithmRDP.Additions;
+                st.Multiplications = AlgorithmRDP.Multiplications;
+                st.RecursiveCalls = AlgorithmRDP.MaxCalls;
+                st.BlockSourseSize = blockSize*2;
+                stat.Add(st);
+
+                newBlocks.Add(newBlock); //.GetRange(1,newBlock.Length-1).ToArray()
+            }
+
+            return newBlocks;
+        }
+
+        public static List<List<byte[]>> EncodeRise(List<MyPointLightArray> data, out List<Statistic> stat)
+        {
+            var enc = new List<List<byte[]>>();
+            stat = new List<Statistic>();
+
+            foreach (var block in data)
+            {
+                #region замеры
+                var blockstat = new Statistic();
+                var swatch = new System.Diagnostics.Stopwatch();
+                swatch.Start();
+                #endregion
+
+                var blockEncX = AlgorithmRise.Encode(block.X);
+                var blockEncY = AlgorithmRise.Encode(block.Y);
+                var blockEnc = new List<byte[]>() {blockEncX, blockEncY};
+                enc.Add(blockEnc);
+
+                #region замеры
+                swatch.Stop();
+                blockstat.BlockRezultSize = blockEncX.Length + blockEncY.Length;
+                blockstat.Time = swatch.Elapsed;
+                stat.Add(blockstat);
+                #endregion
+            }
+
+            return enc;
+        }
+
+        public static List<MyPointLightArray> DecodeRise(List<List<byte[]>> data)
+        {
+            var dec = new List<MyPointLightArray>();
+
+            foreach (var block in data)
+            {
+                var blockDecX = AlgorithmRise.DecodeByte(block.First());
+                var blockDecY = AlgorithmRise.Decode(block.Last());
+                var blockDec = new MyPointLightArray(blockDecX, blockDecY);
+                dec.Add(blockDec);
+            }
+
+            return dec;
+        } 
+
         /// <summary>
         /// Разбиение последовательности на части и ее преобразование с сохранением данных статистики
         /// </summary>
-        public void ConvertRdp(string blockSizeStr, string epsilon)
+        public static void ConvertRdp(string blockSizeStr, string epsilon)
         {
             AlgorithmRDP.Additions = 0;
             AlgorithmRDP.Multiplications = 0;
@@ -95,7 +350,7 @@ namespace SignalCompressionMUI.Models
         /// <summary>
         /// Преобразование сжатой последовательности обратно в обычную
         /// </summary>
-        public void DeconvertRdp()
+        public static void DeconvertRdp()
         {
             SequenceSmoothed = new short[PRez[PRez.Length - 1].X + 1];
 

@@ -1,7 +1,5 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
-using System.Windows;
-using System.Windows.Forms;
 using SignalCompressionMUI.ViewModels;
 using SignalCompressionMUI.Models.Algorithms;
 using SignalCompressionMUI.Models.Algorithms.Huffman;
@@ -386,7 +384,7 @@ namespace SignalCompressionMUI.Models
                 var blockEnc = new List<byte[]>();
                 foreach (var subblock in block)
                 {
-                    var subblockEnc = AlgorithmRise.Encode(AlgorithmRLE.ByteToShort(subblock));
+                    var subblockEnc = AlgorithmRise.Encode(subblock);
                     blockEnc.Add(subblockEnc);
                     enclen += subblockEnc.Length;
                 }
@@ -443,7 +441,7 @@ namespace SignalCompressionMUI.Models
                 var decBlock = new List<byte[]>();
                 foreach (var subblock in block)
                 {
-                    var decSubblock = AlgorithmRLE.ShortToByte(AlgorithmRise.Decode(subblock));
+                    var decSubblock = AlgorithmRise.DecodeByte(subblock);
                     decBlock.Add(decSubblock);
                 }
                 dec.Add(decBlock);

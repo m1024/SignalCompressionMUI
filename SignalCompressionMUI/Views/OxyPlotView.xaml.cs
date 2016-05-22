@@ -5,6 +5,7 @@ using System.Windows.Controls;
 using FirstFloor.ModernUI.Windows.Controls;
 using OxyPlot;
 using OxyPlot.Wpf;
+using SignalCompressionMUI.ViewModels;
 using SvgExporter = OxyPlot.Wpf.SvgExporter;
 
 namespace SignalCompressionMUI.Views
@@ -14,9 +15,12 @@ namespace SignalCompressionMUI.Views
     /// </summary>
     public partial class OxyPlotView : UserControl
     {
+        private OxyPlotViewModel _vm;
+
         public OxyPlotView()
         {
             InitializeComponent();
+            _vm = (OxyPlotViewModel)Resources["Vm"];
         }
 
         private void ToPdf()
@@ -131,6 +135,20 @@ namespace SignalCompressionMUI.Views
         private void ToSvg_OnClick(object sender, RoutedEventArgs e)
         {
             ToSvg();
+        }
+
+        private void SourseGraph_OnClick(object sender, RoutedEventArgs e)
+        {
+            if (_vm == null) return;
+            var s = (ModernToggleButton)sender;
+            SourseLineSeries.ItemsSource = s.IsChecked == true ? _vm.CurveSourse : null;
+        }
+
+        private void NewGraph_OnClick(object sender, RoutedEventArgs e)
+        {
+            if (_vm == null) return;
+            var s = (ModernToggleButton)sender;
+            NewLineSeries.ItemsSource = s.IsChecked == true ? _vm.CurveNew : null;
         }
     }
 }

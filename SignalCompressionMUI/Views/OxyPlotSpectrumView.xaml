@@ -22,11 +22,14 @@
                 <PathGeometry x:Key="PdfIcon">F1 M 35,48L 50,48L 50,34L 38,34L 38,21L 23,21L 23,55L 32,55L 32,51C 32,49.3432 33.3431,48 35,48 Z M 31.9999,59L 19,59L 19,17L 41.25,17L 54,29.75L 53.9999,48C 55.6568,48 56.9999,49.3432 56.9999,51L 56.9999,59C 56.9999,60.6569 55.6568,62 53.9999,62L 34.9999,62C 33.3431,62 31.9999,60.6569 31.9999,59 Z M 41,22.25L 41,30L 48.75,30L 41,22.25 Z M 35,59L 37,59L 37,56L 38,56C 39.6569,56 41,55.1569 41,53.5C 41,51.8431 39.6569,51 38,51L 35,51L 35,59 Z M 38,54L 37,54L 37,53L 38,53C 38.5523,53 39,52.9477 39,53.5C 39,54.0523 38.5523,54 38,54 Z M 49,59L 51,59L 51,56L 53,56L 53,54L 51,54L 51,53L 54,53L 54,51L 49,51L 49,59 Z M 42,51L 42,59L 45,59C 46.6569,59 48,57.6568 48,56L 48,54C 48,52.3431 46.6569,51 45,51L 42,51 Z M 46,56C 46,56.5523 45.5523,57 45,57L 44,57L 44,53L 45,53C 45.5523,53 46,53.4477 46,54L 46,56 Z</PathGeometry>
                 <PathGeometry x:Key="ImageIcon">F1 M 20,17L 44.25,17L 56,28.75L 56,59L 20,59L 20,17 Z M 24,21L 24,55L 52,55L 52,34L 39,34L 39,21L 24,21 Z M 43,22.25L 43,30L 50.75,30L 43,22.25 Z M 27,47.5L 30,50.5L 42.5,38L 47.5,43L 51,39L 51,54L 25,54L 25,50L 27,47.5 Z M 33,22C 33,26.3723 29.3723,30 25,30L 25,22L 33,22 Z</PathGeometry>
                 <PathGeometry x:Key="SaveIcon">F1 M 20.5833,20.5833L 55.4167,20.5833L 55.4167,55.4167L 45.9167,55.4167L 45.9167,44.3333L 30.0833,44.3333L 30.0833,55.4167L 20.5833,55.4167L 20.5833,20.5833 Z M 33.25,55.4167L 33.25,50.6667L 39.5833,50.6667L 39.5833,55.4167L 33.25,55.4167 Z M 26.9167,23.75L 26.9167,33.25L 49.0833,33.25L 49.0833,23.75L 26.9167,23.75 Z</PathGeometry>
+                <PathGeometry x:Key="LineIcon">F1 M 17,19L 20,19L 20,54L 59,54L 59,57L 17,57L 17,19 Z M 22,52L 22,47.25L 32,37L 45,43.75L 57,25L 59,27L 46,48L 32.25,41L 22,52 Z</PathGeometry>
             </StackPanel.Resources>
             <mui:ModernButton ToolTip="Сохранить график в pdf" IconData="{StaticResource PdfIcon}" Margin="0 10 10 10" EllipseDiameter="36" IconWidth="25" IconHeight="25" Click="ToPdf_OnClick"></mui:ModernButton>
             <mui:ModernButton ToolTip="Сохранить график в png" IconData="{StaticResource PngIcon}" Margin="0 10 10 10" EllipseDiameter="36" IconWidth="25" IconHeight="25" Click="ToPng_OnClick"></mui:ModernButton>
             <mui:ModernButton ToolTip="Сохранить график в svg" IconData="{StaticResource ImageIcon}" Margin="0 10 10 10" EllipseDiameter="36" IconWidth="25" IconHeight="25" Click="ToSvg_OnClick"></mui:ModernButton>
             <mui:ModernButton ToolTip="Сохранить график в буфер" IconData="{StaticResource SaveIcon}" Margin="0 10 10 10" EllipseDiameter="36" IconWidth="20" IconHeight="20" Click="ToClipboard_OnClick"></mui:ModernButton>
+            <mui:ModernToggleButton ToolTip="Исходный график" IconData="{StaticResource LineIcon}" IsChecked="True" Margin="0 40 10 10" EllipseDiameter="36" IconWidth="25" IconHeight="25" Click="SourseGraph_OnClick"></mui:ModernToggleButton>
+            <mui:ModernToggleButton ToolTip="Новый график" IconData="{StaticResource LineIcon}" IsChecked="True" Margin="0 10 10 10" EllipseDiameter="36" IconWidth="25" IconHeight="25" Click="NewGraph_OnClick"></mui:ModernToggleButton>
         </StackPanel>
         <oxy:Plot Grid.Column="1" Background="Transparent" PlotAreaBorderColor="Gray" x:Name="Plot">
             <oxy:Plot.Axes>
@@ -34,8 +37,8 @@
                 <oxy:LinearAxis Position="Left" TicklineColor="Gray" TextColor="Gray"/>
             </oxy:Plot.Axes>
             <oxy:Plot.Series>
-                <oxy:LineSeries ItemsSource="{Binding SpectrumSourse}" Color="Red"/>
-                <oxy:LineSeries ItemsSource="{Binding SpectrumNew}" Color="Green"/>
+                <oxy:LineSeries x:Name="SourseLineSeries" ItemsSource="{Binding SpectrumSourse}" Color="Red"/>
+                <oxy:LineSeries x:Name="NewLineSeries" ItemsSource="{Binding SpectrumNew}" Color="Green"/>
             </oxy:Plot.Series>
         </oxy:Plot>
     </Grid>

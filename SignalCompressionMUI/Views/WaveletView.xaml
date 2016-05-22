@@ -67,12 +67,12 @@
             <TextBlock Margin="0 10 0 0">Метод сжатия:</TextBlock>
             <GroupBox  Margin="0 0 10 10">
                 <StackPanel Margin="0 10 0 0">
-                    <RadioButton Margin="10 2" IsChecked="{Binding CompressTypeNothing, Mode=TwoWay}">Без сжатия</RadioButton>
-                    <RadioButton Margin="10 2" IsChecked="{Binding CompressTypeRise, Mode=TwoWay}">Алгоритм Райса</RadioButton>
-                    <RadioButton Margin="10 2" IsChecked="{Binding CompressTypeRle, Mode=TwoWay}">RLE (byte)</RadioButton>
-                    <RadioButton Margin="10 2" IsChecked="{Binding CompressTypeRiseRle, Mode=TwoWay}">RLE(short) + Райс</RadioButton>
-                    <RadioButton Margin="10 2" IsChecked="{Binding CompressTypeHuffman, Mode=TwoWay}">Адаптивный Хаффман</RadioButton>
-                    <RadioButton Margin="10 2" IsChecked="{Binding CompressTypeRiseHuffman, Mode=TwoWay}">RLE + Хаффман</RadioButton>
+                    <RadioButton Margin="10 4" IsChecked="{Binding CompressTypeNothing, Mode=TwoWay}">Без сжатия</RadioButton>
+                    <RadioButton Margin="10 4" IsChecked="{Binding CompressTypeRise, Mode=TwoWay}">Алгоритм Райса</RadioButton>
+                    <RadioButton Margin="10 4" IsChecked="{Binding CompressTypeRle, Mode=TwoWay}">RLE (byte)</RadioButton>
+                    <RadioButton Margin="10 4" IsChecked="{Binding CompressTypeRiseRle, Mode=TwoWay}">RLE(short) + Райс</RadioButton>
+                    <RadioButton Margin="10 4" IsChecked="{Binding CompressTypeHuffman, Mode=TwoWay}">Адаптивный Хаффман</RadioButton>
+                    <RadioButton Margin="10 4" IsChecked="{Binding CompressTypeRiseHuffman, Mode=TwoWay}">RLE + Хаффман</RadioButton>
                 </StackPanel>
             </GroupBox>
             <!--<Button Command="{Binding ConvertCommand}" Margin="10">Преобразовать</Button>
@@ -86,7 +86,7 @@
                     <PathGeometry x:Key="SaveIcon">F1 M 20.5833,20.5833L 55.4167,20.5833L 55.4167,55.4167L 45.9167,55.4167L 45.9167,44.3333L 30.0833,44.3333L 30.0833,55.4167L 20.5833,55.4167L 20.5833,20.5833 Z M 33.25,55.4167L 33.25,50.6667L 39.5833,50.6667L 39.5833,55.4167L 33.25,55.4167 Z M 26.9167,23.75L 26.9167,33.25L 49.0833,33.25L 49.0833,23.75L 26.9167,23.75 Z</PathGeometry>
                     <PathGeometry x:Key="ConvertIcon">F1 M 56.5,19.5C 56.3685,22.1936 54.6627,29.9797 41.8079,42.8345L 40.9436,50.6127L 33.1654,58.3909L 34.0297,50.6127L 25.3873,41.9703L 17.6091,42.8345L 25.3873,35.0564L 33.1654,34.1921C 46.0202,21.3373 53.3743,19.1994 56.5,19.5 Z M 23.2267,52.7733L 26.2515,44.563L 31.437,49.7485L 23.2267,52.7733 Z M 49.5861,26.4139L 47.5931,25.2182L 44.4225,27.4642L 46.9933,29.0067L 48.4788,31.4825L 50.6849,28.2454L 49.5861,26.4139 Z</PathGeometry>
                 </StackPanel.Resources>
-                <ProgressBar Minimum="0" Maximum="1" Height="16" IsIndeterminate="True" Margin="0 10 10 5" Visibility="{Binding PBar, IsAsync=True}"/>
+                <ProgressBar Minimum="0" Maximum="1" Height="16" IsIndeterminate="True" Margin="0 10 10 10" Visibility="{Binding PBar, IsAsync=True}"/>
                 <!--<Button IsDefault="True" IsEnabled="{Binding ConvertIsEnabled}" Command="{Binding ConvertCommand}" Padding="5" Margin="0 10 10 10">Преобразовать</Button>
                 <Button IsEnabled="{Binding SaveIsEnabled}" Command="{Binding SaveCommand}" Padding="5" Margin="0 0 10 10">Сохранить в файл</Button>
                 <Button IsEnabled="{Binding IsStatExist}" Command="{Binding OpenInExcelCommand}" Padding="5" Margin="0 0 10 10">Статистику в excel</Button>-->
