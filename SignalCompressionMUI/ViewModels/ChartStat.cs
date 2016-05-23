@@ -8,10 +8,11 @@ using System.Threading.Tasks;
 
 namespace SignalCompressionMUI.ViewModels
 {
-    public class Population : INotifyPropertyChanged
+    class ChartStat : INotifyPropertyChanged
     {
         private string _name = string.Empty;
-        private int _count = 0;
+        private double _count = 0;
+        private int _time;
 
         public string Name
         {
@@ -26,7 +27,7 @@ namespace SignalCompressionMUI.ViewModels
             }
         }
 
-        public int Count
+        public double Count
         {
             get
             {
@@ -40,14 +41,24 @@ namespace SignalCompressionMUI.ViewModels
 
         }
 
+        public int Time
+        {
+            get
+            {
+                return _time;
+            }
+            set
+            {
+                _time = value;
+                NotifyPropertyChanged("Time");
+            }
+        }
+
         public event PropertyChangedEventHandler PropertyChanged;
 
         private void NotifyPropertyChanged([CallerMemberName] String propertyName = "")
         {
-            if (PropertyChanged != null)
-            {
-                PropertyChanged(this, new PropertyChangedEventArgs(propertyName));
-            }
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
     }
 }

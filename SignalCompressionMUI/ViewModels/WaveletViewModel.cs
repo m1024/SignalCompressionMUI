@@ -50,9 +50,9 @@ namespace SignalCompressionMUI.ViewModels
         private bool _convertIsEnabled;
         private Visibility _statVisiblity;
         private bool _isStatExist;
-        private BackgroundWorker _worker;
-        private BackgroundWorker _worker2;
-        private BackgroundWorker _bwExcel;
+        private readonly BackgroundWorker _bwConvert;
+        private readonly BackgroundWorker _bwOpenEnc;
+        private readonly BackgroundWorker _bwExcel;
 
         public bool IsStatExist
         {
@@ -266,13 +266,13 @@ namespace SignalCompressionMUI.ViewModels
         public WaveletViewModel()
         {
             StatisticTable = null;
-            _worker = new BackgroundWorker();
-            _worker.DoWork += worker_DoWork;
-            _worker.RunWorkerCompleted += worker_RunWorkerCompleted;
+            _bwConvert = new BackgroundWorker();
+            _bwConvert.DoWork += bwConvert_DoWork;
+            _bwConvert.RunWorkerCompleted += bwConvert_RunWorkerCompleted;
 
-            _worker2 = new BackgroundWorker();
-            _worker2.DoWork += worker2_DoWork;
-            _worker2.RunWorkerCompleted += worker2_RunWorkerCompleted;
+            _bwOpenEnc = new BackgroundWorker();
+            _bwOpenEnc.DoWork += bwOpenEnc_DoWork;
+            _bwOpenEnc.RunWorkerCompleted += bwOpenEnc_RunWorkerCompleted;
 
             _bwExcel = new BackgroundWorker();
             _bwExcel.DoWork += bwExcel_DoWork;
@@ -308,15 +308,15 @@ namespace SignalCompressionMUI.ViewModels
         private void ConvertAssync()
         {
             PBar = Visibility.Visible;
-            if (!_worker.IsBusy)
-                _worker.RunWorkerAsync(this);
+            if (!_bwConvert.IsBusy)
+                _bwConvert.RunWorkerAsync(this);
         }
 
         private void OpenAssync()
         {
             PBar = Visibility.Visible;
-            if (!_worker2.IsBusy)
-                _worker2.RunWorkerAsync(this);
+            if (!_bwOpenEnc.IsBusy)
+                _bwOpenEnc.RunWorkerAsync(this);
         }
 
         private void OpenInExcelAssync()
@@ -326,7 +326,7 @@ namespace SignalCompressionMUI.ViewModels
                 _bwExcel.RunWorkerAsync(this);
         }
 
-        private void worker2_DoWork(object sender, DoWorkEventArgs e)
+        private void bwOpenEnc_DoWork(object sender, DoWorkEventArgs e)
         {
             var input = (WaveletViewModel)e.Argument;
             WaveletModel.CompressedFromFile = AccessoryFunc.ReadFile(input.FileName);
@@ -334,29 +334,26 @@ namespace SignalCompressionMUI.ViewModels
             e.Result = input;
         }
 
-        private void worker2_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
+        private void bwOpenEnc_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
         {
             if (e.Error != null)
-                // Ошибка была сгенерирована обработчиком события DoWork
                 ModernDialog.ShowMessage(e.Error.Message, "Ошибка", MessageBoxButton.OK);
-            else
-                PBar = Visibility.Hidden;
+            PBar = Visibility.Hidden;
         }
 
-        private void worker_DoWork(object sender, DoWorkEventArgs e)
+        private void bwConvert_DoWork(object sender, DoWorkEventArgs e)
         {
             var input = (WaveletViewModel)e.Argument;
             input.Convert();
             e.Result = input;
         }
 
-        private void worker_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
+        private void bwConvert_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
         {
             if (e.Error != null)
-                // Ошибка была сгенерирована обработчиком события DoWork
                 ModernDialog.ShowMessage(e.Error.Message, "Ошибка", MessageBoxButton.OK);
-            else
-                PBar = Visibility.Hidden;
+            PBar = Visibility.Hidden;
+            WaveletModel.GenStatChanged = true;
         }
 
         private void bwExcel_DoWork(object sender, DoWorkEventArgs e)
@@ -369,10 +366,8 @@ namespace SignalCompressionMUI.ViewModels
         private void bwExcel_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
         {
             if (e.Error != null)
-                // Ошибка была сгенерирована обработчиком события DoWork
                 ModernDialog.ShowMessage(e.Error.Message, "Ошибка", MessageBoxButton.OK);
-            else
-                PBar = Visibility.Hidden;
+            PBar = Visibility.Hidden;
         }
 
         private void ParsingSourseComplete()
@@ -393,16 +388,25 @@ namespace SignalCompressionMUI.ViewModels
             {
                 case CompressType.Nothing:
                 {
+                    #region Nothing
+                    WaveletModel.Compressed = null;
+
                     StatisticTable = stat;
                     WaveletModel.Deconvert(_wvType, CoeffCount, Rounding);
 
-                    Statistic.CalculateError(WaveletModel.SequenceSourse, WaveletModel.SequenceSmoothed, ref stat, BlockSize);
+                    Statistic.CalculateError(WaveletModel.SequenceSourse, WaveletModel.SequenceSmoothed, ref stat,
+                        BlockSize);
                     stat.Insert(0, Statistic.CalculateTotal(stat));
+                    WaveletModel.NothingStat = stat.First();
                     StatisticTable = stat;
                     break;
+
+                    #endregion
                 }
-                case CompressType.Rise:  
+                case CompressType.Rise:
                 {
+                    #region Rise
+
                     List<Statistic> statRise;
                     var encoded = WaveletModel.EncodeRise(WaveletModel.ConvertedBlocks, out statRise);
 
@@ -420,14 +424,20 @@ namespace SignalCompressionMUI.ViewModels
                     WaveletModel.ConvertedBlocks = decoded;
                     WaveletModel.Deconvert(_wvType, CoeffCount, Rounding);
 
-                    Statistic.CalculateError(WaveletModel.SequenceSourse, WaveletModel.SequenceSmoothed, ref statAll, BlockSize);
+                    Statistic.CalculateError(WaveletModel.SequenceSourse, WaveletModel.SequenceSmoothed, ref statAll,
+                        BlockSize);
                     statAll.Insert(0, Statistic.CalculateTotal(statAll));
+                    WaveletModel.RiseStat = statAll.First();
                     StatisticTable = statAll;
 
                     break;
+
+                    #endregion
                 }
                 case CompressType.Rle:
                 {
+                    #region Rle
+
                     List<Statistic> statRle;
                     var encoded = WaveletModel.EncodeRle(WaveletModel.ConvertedBlocks, out statRle);
 
@@ -449,12 +459,17 @@ namespace SignalCompressionMUI.ViewModels
                     Statistic.CalculateError(WaveletModel.SequenceSourse, WaveletModel.SequenceSmoothed, ref statAll,
                         BlockSize);
                     statAll.Insert(0, Statistic.CalculateTotal(statAll));
+                    WaveletModel.RleStat = statAll.First();
                     StatisticTable = statAll;
 
                     break;
+
+                    #endregion
                 }
                 case CompressType.RiseRle:
                 {
+                    #region RiseRle
+
                     List<Statistic> statRise;
                     List<Statistic> statRle;
                     var encRle = WaveletModel.EncodeRleShort(WaveletModel.ConvertedBlocks, out statRle, RleCount);
@@ -479,15 +494,20 @@ namespace SignalCompressionMUI.ViewModels
                     Statistic.CalculateError(WaveletModel.SequenceSourse, WaveletModel.SequenceSmoothed, ref statAll,
                         BlockSize);
                     statAll.Insert(0, Statistic.CalculateTotal(statAll));
+                    WaveletModel.RleRiseStat = statAll.First();
                     StatisticTable = statAll;
 
                     break;
+
+                    #endregion
                 }
                 case CompressType.Huffman:
                 {
+                    #region Huffman
+
                     List<Statistic> statHuff;
                     var encoded = WaveletModel.EncodeHuffman(WaveletModel.ConvertedBlocks, out statHuff);
-                    
+
                     //сохранить
                     WaveletModel.Compressed = AccessoryFunc.CreateForSaving(encoded, CompressionType);
 
@@ -505,17 +525,22 @@ namespace SignalCompressionMUI.ViewModels
                     Statistic.CalculateError(WaveletModel.SequenceSourse, WaveletModel.SequenceSmoothed, ref statAll,
                         BlockSize);
                     statAll.Insert(0, Statistic.CalculateTotal(statAll));
+                    WaveletModel.HuffStat = statAll.First();
                     StatisticTable = statAll;
 
                     break;
+
+                    #endregion
                 }
                 case CompressType.RiseHuffman:
                 {
+                    #region RiseHuff
+
                     List<Statistic> statRle;
                     List<Statistic> statHuff;
                     var encRise = WaveletModel.EncodeRleShort(WaveletModel.ConvertedBlocks, out statRle, RleCount);
                     var encHuff = WaveletModel.EncodeHuffman(encRise, out statHuff);
-                    
+
                     //сохранить
                     WaveletModel.Compressed = AccessoryFunc.CreateForSaving(encHuff, CompressionType);
 
@@ -536,9 +561,12 @@ namespace SignalCompressionMUI.ViewModels
                     Statistic.CalculateError(WaveletModel.SequenceSourse, WaveletModel.SequenceSmoothed, ref statAll,
                         BlockSize);
                     statAll.Insert(0, Statistic.CalculateTotal(statAll));
+                    WaveletModel.RleHuffStat = statAll.First();
                     StatisticTable = statAll;
 
                     break;
+
+                    #endregion
                 }
             }
 
@@ -547,22 +575,17 @@ namespace SignalCompressionMUI.ViewModels
 
             OxyPlotModel.SequenceSourse = WaveletModel.SequenceSourse;
             OxyPlotModel.SequenceNew = WaveletModel.SequenceSmoothed;
-
             OxyPlotSpectrumModel.SpectrumSourse = sourseSpectrum;
             OxyPlotSpectrumModel.SpectrumNew = newSpectrum;
 
             ZedGraphView.CurveSourse = ZedGraphView.ListToPointList(WaveletModel.SequenceSourse);
             ZedGraphView.CurveNew = ZedGraphView.ListToPointList(WaveletModel.SequenceSmoothed);
-
             ZedGraphSpectrumView.SpectrumSourse = ZedGraphSpectrumView.ArrayToPointList(sourseSpectrum);
             ZedGraphSpectrumView.SpectrumNew = ZedGraphSpectrumView.ArrayToPointList(newSpectrum);
         }
 
         private void OpenFile()
         {
-            //var dialog = new System.Windows.Forms.FolderBrowserDialog();
-            //System.Windows.Forms.DialogResult result = dialog.ShowDialog();
-
             var dlg = new Microsoft.Win32.OpenFileDialog
             {
                 DefaultExt = ".txt",
@@ -647,13 +670,18 @@ namespace SignalCompressionMUI.ViewModels
                 }
             }
 
+            var sourseSpectrum = Spectrum.CalculateSpectrum(WaveletModel.SequenceSourse);
+            var newSpectrum = Spectrum.CalculateSpectrum(WaveletModel.SequenceSmoothed);
+
+            OxyPlotModel.SequenceSourse = WaveletModel.SequenceSourse;
+            OxyPlotModel.SequenceNew = WaveletModel.SequenceSmoothed;
+            OxyPlotSpectrumModel.SpectrumSourse = sourseSpectrum;
+            OxyPlotSpectrumModel.SpectrumNew = newSpectrum;
+
             ZedGraphView.CurveSourse = ZedGraphView.ListToPointList(WaveletModel.SequenceSourse);
             ZedGraphView.CurveNew = ZedGraphView.ListToPointList(WaveletModel.SequenceSmoothed);
-
-            ZedGraphSpectrumView.SpectrumSourse =
-                ZedGraphSpectrumView.ArrayToPointList(ZedGraphSpectrumView.CalculateSpectrum(WaveletModel.SequenceSourse));
-            ZedGraphSpectrumView.SpectrumNew =
-                ZedGraphSpectrumView.ArrayToPointList(ZedGraphSpectrumView.CalculateSpectrum(WaveletModel.SequenceSmoothed));
+            ZedGraphSpectrumView.SpectrumSourse = ZedGraphSpectrumView.ArrayToPointList(sourseSpectrum);
+            ZedGraphSpectrumView.SpectrumNew = ZedGraphSpectrumView.ArrayToPointList(newSpectrum);
         }
 
         private static void SaveFile()

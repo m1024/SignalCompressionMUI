@@ -8,6 +8,25 @@ namespace SignalCompressionMUI.Models
 {
     public static class WaveletModel
     {
+        public static Statistic NothingStat { get; set; }
+        public static Statistic RiseStat { get; set; }
+        public static Statistic RleStat { get; set; }
+        public static Statistic RleRiseStat { get; set; }
+        public static Statistic HuffStat { get; set; }
+        public static Statistic RleHuffStat { get; set; }
+
+        private static bool _genStatChanged;
+
+        public static bool GenStatChanged
+        {
+            get { return _genStatChanged; }
+            set
+            {
+                _genStatChanged = value;
+                if (_genStatChanged) OnStatChanged?.Invoke();
+            }
+        }
+
         public static short[] SequenceSmoothed { get; set; }
         private static short[] _sequenceSourse;
 
@@ -44,9 +63,10 @@ namespace SignalCompressionMUI.Models
         /// </summary>
         public static byte[] CompressedFromFile { get; set; }
 
-        public delegate void Complete();
-        public static event Complete OnCompressComplete;
-        public static event Complete OnSourseParsingComplete;
+        public delegate void ValueChangedHandler();
+        public static event ValueChangedHandler OnCompressComplete;
+        public static event ValueChangedHandler OnSourseParsingComplete;
+        public static event ValueChangedHandler OnStatChanged;
 
         public static void Read(string path)
         {

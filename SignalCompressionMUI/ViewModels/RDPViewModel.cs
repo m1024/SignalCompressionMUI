@@ -1,12 +1,16 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.ComponentModel;
-using System.Threading.Tasks;
+using System.IO;
+using System.Linq;
 using System.Windows;
+using System.Windows.Controls;
 using System.Windows.Input;
 using FirstFloor.ModernUI.Windows.Controls;
 using SignalCompressionMUI.Models;
 using SignalCompressionMUI.Models.Algorithms.Spectrum;
 using SignalCompressionMUI.Views;
+using Excel = Microsoft.Office.Interop.Excel;
 
 namespace SignalCompressionMUI.ViewModels
 {
@@ -18,16 +22,123 @@ namespace SignalCompressionMUI.ViewModels
         private string _fileName;
         private int _epsilon = 1;
         private int _blockSize = 1000;
-        private List<Statistic> _statistic;
+        private List<Statistic> _statisticTable;
         private readonly BackgroundWorker _bwConvert;
+        private readonly BackgroundWorker _bwOpenEnc;
+        private readonly BackgroundWorker _bwExcel;
+        private Visibility _statVisiblity;
         private Visibility _pBar;
+        private Visibility _addAndMul;
+        private CompressType _compressionType;
         private bool _compressTypeNothing;
         private bool _compressTypeRise;
         private bool _compressTypeHuffman;
+        private bool _compressTypeRiseRle;
+        private bool _compressTypeRiseHuffman;
+        private bool _saveIsEnabled;
+        private bool _convertIsEnabled;
+        private bool _isStatExist;
+        private bool _statColumnsFixed;
+        private DataGridLength _colWidth;
 
+        public Visibility AddAndMul
+        {
+            get { return _addAndMul; }
+            set
+            {
+                _addAndMul = value;
+                OnPropertyChanged("AddAndMul");
+            }
+        }
 
-        public CompressType CompressionType { get; set; }
+        public DataGridLength ColWidth
+        {
+            get { return _colWidth; }
+            set
+            {
+                _colWidth = value;
+                OnPropertyChanged("ColWidth");
+            }
+        }
 
+        public bool StatColumnsFixed
+        {
+            get { return _statColumnsFixed; }
+            set
+            {
+                _statColumnsFixed = value;                
+                OnPropertyChanged("StatColumnsFixed");
+            }
+        }
+
+        public Visibility StatVisibility
+        {
+            get { return _statVisiblity; }
+            set
+            {
+                _statVisiblity = value;
+                OnPropertyChanged("StatVisibility");
+            }
+        }
+
+        public List<Statistic> StatisticTable
+        {
+            get { return _statisticTable; }
+            set
+            {
+                _statisticTable = value;
+                if (_statisticTable == null)
+                {
+                    StatVisibility = Visibility.Hidden;
+                    IsStatExist = false;
+                }
+                else
+                {
+                    StatVisibility = Visibility.Visible;
+                    IsStatExist = true;
+                }
+                OnPropertyChanged("StatisticTable");
+            }
+        }
+
+        public CompressType CompressionType
+        {
+            get { return _compressionType; }
+            set
+            {
+                _compressionType = value;
+                AddAndMul = value == CompressType.Nothing ? Visibility.Visible : Visibility.Collapsed;
+                OnPropertyChanged("CompressionType");
+            }
+        }
+
+        public bool IsStatExist
+        {
+            get { return _isStatExist; }
+            set
+            {
+                _isStatExist = value;
+                OnPropertyChanged("IsStatExist");
+            }
+        }
+        public bool SaveIsEnabled
+        {
+            get { return _saveIsEnabled; }
+            set
+            {
+                _saveIsEnabled = value;
+                OnPropertyChanged("SaveIsEnabled");
+            }
+        }
+        public bool ConvertIsEnabled
+        {
+            get { return _convertIsEnabled; }
+            set
+            {
+                _convertIsEnabled = value;
+                OnPropertyChanged("ConvertIsEnabled");
+            }
+        }
         public bool CompressTypeNothing
         {
             get { return _compressTypeNothing; }
@@ -58,6 +169,26 @@ namespace SignalCompressionMUI.ViewModels
                 OnPropertyChanged("CompressTypeHuffman");
             }
         }
+        public bool CompressTypeRiseRle
+        {
+            get { return _compressTypeRiseRle; }
+            set
+            {
+                _compressTypeRiseRle = value;
+                if (value) CompressionType = CompressType.RiseRle;
+                OnPropertyChanged("CompressTypeRiseRle");
+            }
+        }
+        public bool CompressTypeRiseHuffman
+        {
+            get { return _compressTypeRiseHuffman; }
+            set
+            {
+                _compressTypeRiseHuffman = value;
+                if (value) CompressionType = CompressType.RiseHuffman;
+                OnPropertyChanged("CompressTypeRiseHuffman");
+            }
+        }
 
         public Visibility PBar
         {
@@ -68,16 +199,6 @@ namespace SignalCompressionMUI.ViewModels
                 OnPropertyChanged("PBar");
             }
         }
-
-        public List<Statistic> Statistic
-        {
-            get { return _statistic; }
-            set
-            {
-                _statistic = value;
-                OnPropertyChanged("Statistic");
-            }
-        } 
 
         public string FileName
         {
@@ -94,7 +215,8 @@ namespace SignalCompressionMUI.ViewModels
             get { return _epsilon; }
             set
             {
-                _epsilon = value;
+                if (value >= 1)
+                    _epsilon = value;
                 OnPropertyChanged("Epsilon");
             }
         }
@@ -104,7 +226,8 @@ namespace SignalCompressionMUI.ViewModels
             get { return _blockSize;}
             set
             {
-                _blockSize = value;
+                if (value >= 1)
+                    _blockSize = value;
                 OnPropertyChanged("BlockSize");
             }
         }
@@ -113,14 +236,31 @@ namespace SignalCompressionMUI.ViewModels
 
         public RDPViewModel()
         {
+            StatisticTable = null;
             _bwConvert = new BackgroundWorker();
             _bwConvert.DoWork += bwConvert_DoWork;
             _bwConvert.RunWorkerCompleted += bwConvert_RunWorkerCompleted;
 
+            _bwOpenEnc = new BackgroundWorker();
+            _bwOpenEnc.DoWork += bwOpenEnc_DoWork;
+            _bwOpenEnc.RunWorkerCompleted += bwOpenEnc_RunWorkerCompleted;
+
+            _bwExcel = new BackgroundWorker();
+            _bwExcel.DoWork += bwExcel_DoWork;
+            _bwExcel.RunWorkerCompleted += bwExcel_RunWorkerCompleted;
+
             PBar = Visibility.Hidden;
             OpenFileCommand = new RelayCommand(arg => OpenFile());
-            //ConvertCommand = new RelayCommand(arg => ConvertAssync());
-            ConvertCommand = new RelayCommand(arg => Convert());
+            ConvertCommand = new RelayCommand(arg => ConvertAssync());
+            SaveCommand = new RelayCommand(arg => SaveFile());
+            OpenInExcelCommand = new RelayCommand(arg => OpenInExcelAssync());
+            //ConvertCommand = new RelayCommand(arg => Convert());
+
+            CompressTypeNothing = true;
+            RDPModel.OnCompressComplete += CompressedComplete;
+            RDPModel.OnSourseParsingComplete += ParsingSourseComplete;
+
+            ColWidth = 100;
         }
 
         #region Commands
@@ -129,10 +269,23 @@ namespace SignalCompressionMUI.ViewModels
 
         public ICommand ConvertCommand { get; set; }
 
+        public ICommand SaveCommand { get; set; }
+
+        public ICommand OpenInExcelCommand { get; set; }
+
         #endregion
 
         #region Methods
 
+        private void ParsingSourseComplete()
+        {
+            ConvertIsEnabled = RDPModel.SequenceSourse != null;
+        }
+
+        private void CompressedComplete()
+        {
+            SaveIsEnabled = RDPModel.Compressed != null;
+        }
 
         private void bwConvert_DoWork(object sender, DoWorkEventArgs e)
         {
@@ -145,8 +298,8 @@ namespace SignalCompressionMUI.ViewModels
         {
             if (e.Error != null)
                 ModernDialog.ShowMessage(e.Error.Message, "Ошибка", MessageBoxButton.OK);
-            else
-                PBar = Visibility.Hidden;
+            PBar = Visibility.Hidden;
+            RDPModel.GenStatChanged = true;
         }
 
         private void ConvertAssync()
@@ -154,6 +307,48 @@ namespace SignalCompressionMUI.ViewModels
             PBar = Visibility.Visible;
             if (!_bwConvert.IsBusy)
                 _bwConvert.RunWorkerAsync(this);
+        }
+
+        private void OpenAssync()
+        {
+            PBar = Visibility.Visible;
+            if (!_bwOpenEnc.IsBusy)
+                _bwOpenEnc.RunWorkerAsync(this);
+        }
+        private void OpenInExcelAssync()
+        {
+            PBar = Visibility.Visible;
+            if (!_bwExcel.IsBusy)
+                _bwExcel.RunWorkerAsync(this);
+        }
+
+        private void bwExcel_DoWork(object sender, DoWorkEventArgs e)
+        {
+            var input = (RDPViewModel)e.Argument;
+            input.OpenInExcel();
+            e.Result = input;
+        }
+
+        private void bwExcel_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
+        {
+            if (e.Error != null)
+                ModernDialog.ShowMessage(e.Error.Message, "Ошибка", MessageBoxButton.OK);
+            PBar = Visibility.Hidden;
+        }
+
+        private void bwOpenEnc_DoWork(object sender, DoWorkEventArgs e)
+        {
+            var input = (RDPViewModel)e.Argument;
+            RDPModel.CompressedFromFile = AccessoryFunc.ReadFile(input.FileName);
+            input.DecompressFile();
+            e.Result = input;
+        }
+
+        private void bwOpenEnc_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
+        {
+            if (e.Error != null)
+                ModernDialog.ShowMessage(e.Error.Message, "Ошибка", MessageBoxButton.OK);
+            PBar = Visibility.Hidden;
         }
 
         private void Convert()
@@ -170,22 +365,32 @@ namespace SignalCompressionMUI.ViewModels
             {
                 case CompressType.Nothing:
                 {
+                    #region Nothing
+
                     var decDeltaCut = RDPModel.DeltaDecodedCut(encDeltaCut);
                     var decRdp = RDPModel.DeconvertRdp(decDeltaCut);
 
                     RDPModel.PRez = RDPModel.ConcatMyPoints(decDeltaCut);
                     RDPModel.SequenceSmoothed = decRdp;
 
-                    Models.Statistic.CalculateError(RDPModel.SequenceSourse, RDPModel.SequenceSmoothed, ref stat,
+                    Statistic.CalculateError(RDPModel.SequenceSourse, RDPModel.SequenceSmoothed, ref stat,
                         BlockSize);
-                    stat.Insert(0, Models.Statistic.CalculateTotal(stat));
-                    Statistic = stat;
+                    stat.Insert(0, Statistic.CalculateTotal(stat));
+                    RDPModel.NothingStat = stat.First();
+                    StatisticTable = stat;
                     break;
+
+                    #endregion
                 }
                 case CompressType.Rise:
                 {
+                    #region Rise
+
                     List<Statistic> statRise;
                     var encRise = RDPModel.EncodeRise(encDeltaCut, out statRise);
+
+                    //сохранить в файл
+                    RDPModel.Compressed = AccessoryFunc.CreateForSaving(encRise, CompressionType);
 
                     var statAll = new List<Statistic>();
                     for (int i = 0; i < statRise.Count; i++)
@@ -204,12 +409,130 @@ namespace SignalCompressionMUI.ViewModels
                     RDPModel.SequenceSmoothed = decRdp;
 
 
-                    Models.Statistic.CalculateError(RDPModel.SequenceSourse, RDPModel.SequenceSmoothed, ref statAll, BlockSize);
-                    statAll.Insert(0, Models.Statistic.CalculateTotal(statAll));
-                    Statistic = statAll;
+                    Statistic.CalculateError(RDPModel.SequenceSourse, RDPModel.SequenceSmoothed, ref statAll,
+                        BlockSize);
+                    statAll.Insert(0, Statistic.CalculateTotal(statAll));
+                    RDPModel.RiseStat = statAll.First();
+                    StatisticTable = statAll;
 
                     break;
+
+                    #endregion
                 }
+                case CompressType.RiseRle:
+                {
+                    #region RiseRle
+                    
+                    List<Statistic> statRise;
+                    var encRle = RDPModel.EncodeRle(encDeltaCut);
+                    var encRise = RDPModel.EncodeRise(encRle, out statRise);
+
+                    var statAll = new List<Statistic>();
+                    for (int i = 0; i < statRise.Count; i++)
+                    {
+                        var all = stat[i] + statRise[i];
+                        all.BlockRezultSize = statRise[i].BlockRezultSize;
+                        statAll.Add(all);
+                    }
+
+
+                    var decRise = RDPModel.DecodeRise(encRise);
+                    var decRle = RDPModel.DecodeRle(decRise);
+                    var decDeltaCut = RDPModel.DeltaDecodedCut(decRle);
+                    var decRdp = RDPModel.DeconvertRdp(decDeltaCut);
+
+                    RDPModel.PRez = RDPModel.ConcatMyPoints(decDeltaCut);
+                    RDPModel.SequenceSmoothed = decRdp;
+
+
+                    Models.Statistic.CalculateError(RDPModel.SequenceSourse, RDPModel.SequenceSmoothed, ref statAll,
+                        BlockSize);
+                    statAll.Insert(0, Models.Statistic.CalculateTotal(statAll));
+                    RDPModel.RleRiseStat = statAll.First();
+                    StatisticTable = statAll;
+
+                    break;
+
+                    #endregion
+                }
+                case CompressType.RiseHuffman:
+                {
+                    #region RiseHuff
+
+                    List<Statistic> statRise;
+                    var encHuffHalf = RDPModel.EncodeHuffmanHalf(encDeltaCut);
+                    var encRise = RDPModel.EncodeRise(encHuffHalf, out statRise);
+
+                    var statAll = new List<Statistic>();
+                    for (int i = 0; i < statRise.Count; i++)
+                    {
+                        var all = stat[i] + statRise[i];
+                        all.BlockRezultSize = statRise[i].BlockRezultSize;
+                        statAll.Add(all);
+                    }
+
+
+                    var decRise = RDPModel.DecodeRise(encRise);
+                    var decHuffHalf = RDPModel.DecodeHuffmanHalf(decRise);
+                    var decDeltaCut = RDPModel.DeltaDecodedCut(decHuffHalf);
+                    var decRdp = RDPModel.DeconvertRdp(decDeltaCut);
+
+                    RDPModel.PRez = RDPModel.ConcatMyPoints(decDeltaCut);
+                    RDPModel.SequenceSmoothed = decRdp;
+
+
+                    Statistic.CalculateError(RDPModel.SequenceSourse, RDPModel.SequenceSmoothed, ref statAll,
+                        BlockSize);
+                    statAll.Insert(0, Statistic.CalculateTotal(statAll));
+                    RDPModel.HuffStat = statAll.First();
+                    StatisticTable = statAll;
+
+                    break;
+
+                    #endregion
+                }
+            }
+
+            var sourseSpectrum = Spectrum.CalculateSpectrum(RDPModel.SequenceSourse);
+            var newSpectrum = Spectrum.CalculateSpectrum(RDPModel.SequenceSmoothed);
+
+            OxyPlotModel.SequenceSourse = RDPModel.SequenceSourse;
+            OxyPlotModel.SequenceNew = RDPModel.SequenceSmoothed;
+            OxyPlotSpectrumModel.SpectrumSourse = sourseSpectrum;
+            OxyPlotSpectrumModel.SpectrumNew = newSpectrum;
+
+            ZedGraphView.CurveSourse = ZedGraphView.ListToPointList(RDPModel.SequenceSourse);
+            ZedGraphView.CurveNew = ZedGraphView.ListToPointList(RDPModel.PRez);
+            ZedGraphSpectrumView.SpectrumSourse = ZedGraphSpectrumView.ArrayToPointList(sourseSpectrum);
+            ZedGraphSpectrumView.SpectrumNew = ZedGraphSpectrumView.ArrayToPointList(newSpectrum);
+        }
+
+        private void DecompressFile()
+        {
+            CompressType type;
+            var dec = AccessoryFunc.CreateFromSaving(RDPModel.CompressedFromFile, out type);
+
+            switch (type)
+            {
+                case CompressType.Rise:
+                    {
+                        var decRise = RDPModel.DecodeRise(dec);
+                        var decDeltaCut = RDPModel.DeltaDecodedCut(decRise);
+                        var decRdp = RDPModel.DeconvertRdp(decDeltaCut);
+
+                        RDPModel.PRez = RDPModel.ConcatMyPoints(decDeltaCut);
+                        RDPModel.SequenceSmoothed = decRdp;
+
+                        break;
+                    }
+                case CompressType.RiseRle:
+                    {
+                        break;
+                    }
+                case CompressType.RiseHuffman:
+                    {
+                        break;
+                    }
             }
 
             var sourseSpectrum = Spectrum.CalculateSpectrum(RDPModel.SequenceSourse);
@@ -231,15 +554,119 @@ namespace SignalCompressionMUI.ViewModels
             var dlg = new Microsoft.Win32.OpenFileDialog
             {
                 DefaultExt = ".txt",
-                Filter = "Text documents (.txt)|*.txt"
+                Filter = "Text documents (.txt)|*.txt|Emg compress files (.emgrdp)|*.emgrdp"
             };
 
             var result = dlg.ShowDialog();
             if (result == true)
             {
-                // Open document
                 var filename = dlg.FileName;
                 FileName = filename;
+            }
+
+            //если открывают сжатый файл
+            var ext = Path.GetExtension(FileName);
+            RDPModel.Compressed = null;
+            if (ext == ".emgrdp")
+            {
+                OpenAssync();
+            }
+            else if (ext == ".txt")
+            {
+                try
+                {
+                    RDPModel.Read(FileName);
+                }
+                catch (Exception ex)
+                {
+                    ModernDialog.ShowMessage(ex.Message, "Ошибка", MessageBoxButton.OK);
+                }
+            }
+        }
+
+        private void OpenInExcel()
+        {
+            var excelApp = new Excel.Application();
+            excelApp.Application.Workbooks.Add(Type.Missing);
+            excelApp.Columns.ColumnWidth = 15;
+
+            var sheet = (Excel.Worksheet)excelApp.ActiveSheet;
+
+            sheet.Range[sheet.Cells[2, 1], sheet.Cells[2, 6]].Merge(Type.Missing);
+            sheet.Cells[2, 1] = "Статистика преобразования Рамера — Дугласа — Пекера";
+            (sheet.Cells[2, 1] as Excel.Range).Font.Bold = true;
+            (sheet.Cells[2, 1] as Excel.Range).Font.Size = 16;
+
+            for (int i = 4; i < 7; i++)
+            {
+                sheet.Range[sheet.Cells[i, 1], sheet.Cells[i, 2]].Merge(Type.Missing);
+                (sheet.Cells[i, 3] as Excel.Range).HorizontalAlignment = Excel.XlHAlign.xlHAlignRight;
+            }
+
+            sheet.Cells[4, 1] = "Длина блока";
+            sheet.Cells[4, 3] = BlockSize;
+            sheet.Cells[5, 1] = "Округление";
+            sheet.Cells[5, 3] = Epsilon;
+            sheet.Cells[6, 1] = "Метод сжатия";
+            sheet.Cells[6, 3] = CompressionType.ToString();
+
+
+            sheet.Range[sheet.Cells[8, 1], sheet.Cells[8, 8]].WrapText = true;
+            sheet.Range[sheet.Cells[8, 1], sheet.Cells[8, 8]].HorizontalAlignment = Excel.XlHAlign.xlHAlignCenter;
+            sheet.Range[sheet.Cells[8, 1], sheet.Cells[8, 8]].Font.Bold = true;
+            sheet.Cells[8, 1] = "Номер";
+            sheet.Cells[8, 2] = "Время (Ticks)";
+            sheet.Cells[8, 3] = "Размер исходного блока (bytes)";
+            sheet.Cells[8, 4] = "Размер нового блока (bytes)";
+            sheet.Cells[8, 5] = "Коэффициент сжатия";
+            sheet.Cells[8, 6] = "Суммарная погрешность";
+            if (CompressionType == CompressType.Nothing)
+            {
+                sheet.Cells[8, 7] = "Сложений";
+                sheet.Cells[8, 8] = "Умножений";
+            }
+
+            for (int i = 0; i < StatisticTable.Count; i++)
+            {
+                sheet.Range[sheet.Cells[i + 9, 1], sheet.Cells[i + 9, 8]].HorizontalAlignment = Excel.XlHAlign.xlHAlignCenter;
+                sheet.Cells[i + 9, 1] = StatisticTable[i].Title;
+                sheet.Cells[i + 9, 2] = StatisticTable[i].Time.Ticks;
+                sheet.Cells[i + 9, 3] = StatisticTable[i].BlockSourseSize;
+                sheet.Cells[i + 9, 4] = StatisticTable[i].BlockRezultSize;
+                sheet.Cells[i + 9, 5] = StatisticTable[i].CompressionRatio;
+                sheet.Cells[i + 9, 6] = StatisticTable[i].Error;
+                if (CompressionType == CompressType.Nothing)
+                {
+                    sheet.Cells[i + 9, 7] = StatisticTable[i].Additions;
+                    sheet.Cells[i + 9, 8] = StatisticTable[i].Multiplications;
+                }
+            }
+
+            excelApp.Visible = true;
+        }
+
+        private static void SaveFile()
+        {
+            var dlg = new Microsoft.Win32.SaveFileDialog
+            {
+                FileName = "Compressed signal",
+                DefaultExt = ".emgrdp",
+                Filter = "Emg compress files (.emgrdp)|*.emgrdp"
+            };
+
+            var result = dlg.ShowDialog();
+            if (result == true)
+            {
+                string filename = dlg.FileName;
+                try
+                {
+                    AccessoryFunc.WriteFile(filename, RDPModel.Compressed);
+                    ModernDialog.ShowMessage("Файл успешно сохранен", "Результат операции", MessageBoxButton.OK);
+                }
+                catch (Exception ex)
+                {
+                    ModernDialog.ShowMessage(ex.Message, "Результат операции", MessageBoxButton.OK);
+                }
             }
         }
 

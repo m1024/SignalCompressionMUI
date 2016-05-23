@@ -109,5 +109,16 @@ namespace SignalCompressionUnitTest
 
             CollectionAssert.AreEqual(array, decoded);
         }
+
+        [TestMethod]
+        public void EncodeTest7()
+        {
+            byte[] array = { 0, 4, 4, 1 };
+
+            var encoded = AlgorithmRLE.Encode(array);
+            var decoded = AlgorithmRLE.Decode(encoded);
+
+            CollectionAssert.AreEqual(array, decoded);
+        }
     }
 }

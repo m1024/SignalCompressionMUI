@@ -104,12 +104,12 @@
     <Compile Include="Models\WaveletModel.cs" />
     <Compile Include="Models\WaveletTree.cs" />
     <Compile Include="ViewModels\AsyncDelegateCommand.cs" />
+    <Compile Include="ViewModels\ChartStat.cs" />
     <Compile Include="ViewModels\DCTViewModel.cs" />
     <Compile Include="ViewModels\EnumHelper.cs" />
     <Compile Include="ViewModels\ModernChartsViewModel.cs" />
     <Compile Include="ViewModels\OxyPlotSpectrumViewModel.cs" />
     <Compile Include="ViewModels\OxyPlotViewModel.cs" />
-    <Compile Include="ViewModels\Population.cs" />
     <Compile Include="ViewModels\WaveletViewModel.cs" />
     <Compile Include="Views\DCTView.xaml.cs">
       <DependentUpon>DCTView.xaml</DependentUpon>

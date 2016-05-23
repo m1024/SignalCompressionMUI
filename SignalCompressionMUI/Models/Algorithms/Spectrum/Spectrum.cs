@@ -12,6 +12,8 @@ namespace SignalCompressionMUI.Models.Algorithms.Spectrum
         /// <returns>Амплитудный спектр сигнала</returns>
         public static int[] CalculateSpectrum(IReadOnlyList<short> sequence)
         {
+            if (sequence == null) return new int[0];
+
             var n = (int)Math.Log(sequence.Count, 2) + 1;
             var len = (int)Math.Pow(2, n);
             var sLen = sequence.Count;

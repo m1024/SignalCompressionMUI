@@ -7,7 +7,7 @@
              xmlns:viewModels="clr-namespace:SignalCompressionMUI.ViewModels"
              xmlns:alg="clr-namespace:SignalCompressionMUI.Models.Algorithms"
              mc:Ignorable="d" 
-             d:DesignHeight="300" d:DesignWidth="300">
+             d:DesignHeight="600" d:DesignWidth="1100">
     <UserControl.Resources>
         <viewModels:EnumConverter x:Key="EnumConverter"></viewModels:EnumConverter>
         <viewModels:RDPViewModel x:Key="Vm" />
@@ -17,6 +17,7 @@
             <ColumnDefinition Width="3*"/>
             <ColumnDefinition Width="4"/>
             <ColumnDefinition Width="5*"/>
+            <ColumnDefinition Width="Auto"></ColumnDefinition>
         </Grid.ColumnDefinitions>
 
         <StackPanel Grid.Column="0">
@@ -39,19 +40,20 @@
                 <TextBox Grid.Column="0" Grid.Row="0" x:Name="FileNameTextBox" IsReadOnly="True"   Padding="3" Margin="0 0 5 0" MinWidth="200" Text="{Binding FileName}"/>
                 <Button Grid.Column="1" Grid.Row="0" x:Name="OpenFileButton" Content="Обзор" Padding="3" Margin="0 0 5 0" Command="{Binding OpenFileCommand}"></Button>
 
-                <TextBlock Grid.Column="0" Grid.Row="1" MinWidth="150" VerticalAlignment="Center" Padding="0 2 2 2" Margin="0 20 5 5">Длина блока</TextBlock>
-                <TextBox Grid.Column="1" Grid.Row="1" x:Name="DcpBlockSize" Padding="2" MinWidth="120" Margin="0 15 5 5" Text="{Binding BlockSize}"></TextBox>
+                <TextBlock Grid.Column="0" Grid.Row="1" MinWidth="150" VerticalAlignment="Center" Padding="0 2 2 2" Margin="0 25 5 5">Длина блока</TextBlock>
+                <TextBox Grid.Column="1" Grid.Row="1" x:Name="DcpBlockSize" Padding="2" MinWidth="120" Margin="0 25 5 5" Text="{Binding BlockSize}"></TextBox>
 
                 <TextBlock ToolTip="" MinWidth="150" Grid.Row="3" Grid.Column="0" Padding="0 2 2 2" Margin="0 0 5 5">Точность приближения</TextBlock>
                 <TextBox ToolTip="" Grid.Row="3" Grid.Column="1" MinWidth="50" Padding="2" Margin="0 0 5 5" Text="{Binding Epsilon}"></TextBox>
             </Grid>
 
-            <TextBlock Margin="0 10 0 0">Метод сжатия:</TextBlock>
+            <TextBlock Margin="0 20 0 0">Метод сжатия:</TextBlock>
             <GroupBox  Margin="0 0 10 10">
                 <StackPanel Margin="0 10 0 0">
-                    <RadioButton Margin="10 4" IsChecked="{Binding CompressTypeNothing, Mode=TwoWay}">Без сжатия</RadioButton>
-                    <RadioButton Margin="10 4" IsChecked="{Binding CompressTypeRise, Mode=TwoWay}">Алгоритм Райса</RadioButton>
-                    <RadioButton Margin="10 4" IsChecked="{Binding CompressTypeHuffman, Mode=TwoWay}">Алгоритм Хаффмана</RadioButton>
+                    <RadioButton Margin="10 6" IsChecked="{Binding CompressTypeNothing, Mode=TwoWay}">Без сжатия</RadioButton>
+                    <RadioButton Margin="10 6" IsChecked="{Binding CompressTypeRise, Mode=TwoWay}">Алгоритм Райса</RadioButton>
+                    <RadioButton Margin="10 6" IsChecked="{Binding CompressTypeRiseRle, Mode=TwoWay}">Алгоритм RLE + Райса</RadioButton>
+                    <RadioButton Margin="10 6" IsChecked="{Binding CompressTypeRiseHuffman, Mode=TwoWay}">Алгоритм Хаффмана + Райса</RadioButton>
                 </StackPanel>
             </GroupBox>
         </StackPanel>
@@ -84,8 +86,99 @@
 
         <GridSplitter Grid.Column="1" />
 
-        <DataGrid x:Name="StatisticTable"  Grid.Column="2" Grid.Row="0" IsReadOnly="true" ItemsSource="{Binding Path=Statistic}">
+        <!--<DataGrid x:Name="StatisticTable"  Grid.Column="2" Grid.Row="0" IsReadOnly="true" ItemsSource="{Binding Path=StatisticTable}">
+        </DataGrid>-->
+
+        <DataGrid Grid.Column="2" Grid.Row="0" IsReadOnly="True" ItemsSource="{Binding StatisticTable}" x:Name="DataGridStat"
+                  AutoGenerateColumns="False" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto" Visibility="{Binding StatVisibility}" >
+            <DataGrid.Resources>
+                <DataTemplate x:Key="MyHeaderDataTemplate">
+                    <TextBlock VerticalAlignment="Center" FontStyle="Normal" FontWeight="Bold" TextAlignment="Center" Text="{TemplateBinding Content}" TextWrapping="Wrap" />
+                </DataTemplate>
+            </DataGrid.Resources>
+            <DataGrid.Columns>
+                <DataGridTemplateColumn Header="Номер" Width="Auto" HeaderTemplate="{StaticResource MyHeaderDataTemplate}" CanUserSort="True" SortMemberPath="Number">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <TextBlock TextAlignment="Center" Text="{Binding Title}"/>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+
+                <DataGridTemplateColumn Header="Время" Width="Auto" HeaderTemplate="{StaticResource MyHeaderDataTemplate}" CanUserSort="True" SortMemberPath="Time">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <TextBlock TextAlignment="Center" Text="{Binding Time}"/>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+
+                <DataGridTemplateColumn Header="Размер исходного блока (байт)" Width="160" HeaderTemplate="{StaticResource MyHeaderDataTemplate}" CanUserSort="True" SortMemberPath="BlockSourseSize">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <TextBlock TextAlignment="Center" Text="{Binding BlockSourseSize}"/>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+
+                <DataGridTemplateColumn Header="Размер нового блока (байт)" Width="160" HeaderTemplate="{StaticResource MyHeaderDataTemplate}" CanUserSort="True" SortMemberPath="BlockRezultSize">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <TextBlock TextAlignment="Center" Text="{Binding BlockRezultSize}"/>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+
+                <DataGridTemplateColumn Header="Коэффициент сжатия" Width="160" HeaderTemplate="{StaticResource MyHeaderDataTemplate}" CanUserSort="True" SortMemberPath="CompressionRatio">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <TextBlock TextAlignment="Center" Text="{Binding CompressionRatio}"/>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+
+                <DataGridTemplateColumn Header="Суммарная погрешность" Width="160" HeaderTemplate="{StaticResource MyHeaderDataTemplate}" CanUserSort="True" SortMemberPath="Error">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <TextBlock TextAlignment="Center" Text="{Binding Error}"/>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+
+                <DataGridTemplateColumn Header="Рекурсивных вызовов" Width="160" HeaderTemplate="{StaticResource MyHeaderDataTemplate}" CanUserSort="True" SortMemberPath="RecursiveCalls">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <TextBlock TextAlignment="Center" Text="{Binding RecursiveCalls}"/>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+
+                <DataGridTemplateColumn Header="Сложений" Width="160" Visibility="{Binding DataContext.AddAndMul, Source={x:Reference HelperElement}}" HeaderTemplate="{StaticResource MyHeaderDataTemplate}" CanUserSort="True" SortMemberPath="Additions">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <TextBlock TextAlignment="Center" Text="{Binding Additions}"/>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+
+                <DataGridTemplateColumn Header="Умножений" Width="160" Visibility="{Binding DataContext.AddAndMul, Source={x:Reference HelperElement}}" HeaderTemplate="{StaticResource MyHeaderDataTemplate}" CanUserSort="True" SortMemberPath="Multiplications">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <TextBlock TextAlignment="Center" Text="{Binding Multiplications}"/>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+
+            </DataGrid.Columns>
         </DataGrid>
+        <FrameworkElement Grid.Column="2" x:Name="HelperElement" Visibility="Collapsed"/>
+
+        <!--<StackPanel Grid.Column="3">
+            <StackPanel.Resources>
+                <PathGeometry x:Key="GridIcon">F1 M 16,25L 60,25L 60,29L 56,29L 56,32L 60,32L 60,36L 56,36L 56,39L 60,39L 60,43L 56,43L 56,46L 60,46L 60,50L 56,50L 56,53L 52,53L 52,50L 44,50L 44,53L 40,53L 40,50L 32,50L 32,53L 28,53L 28,50L 20,50L 20,53L 16,53L 16,25 Z M 52,46L 52,43L 44,43L 44,46L 52,46 Z M 40,46L 40,43L 32,43L 32,46L 40,46 Z M 28,46L 28,43L 20,43L 20,46L 28,46 Z M 32,32L 40,32L 40,29.0001L 32,29.0001L 32,32 Z M 43.9999,32L 51.9999,32L 51.9999,29L 43.9999,29L 43.9999,32 Z M 20,29L 20,32L 28,32L 28,29L 20,29 Z M 20,36L 20,39L 28,39L 28,36L 20,36 Z M 32,36L 32,39L 40,39L 40,36L 32,36 Z M 44,36L 44,39L 52,39L 52,36L 44,36 Z</PathGeometry>
+            </StackPanel.Resources>
+           <mui:ModernToggleButton ToolTip="Новый график" IconData="{StaticResource GridIcon}" IsChecked="{Binding StatColumnsFixed}" Margin="0" EllipseDiameter="30" IconWidth="18" IconHeight="18"></mui:ModernToggleButton>
+        </StackPanel>-->
 
     </Grid>
 </UserControl>

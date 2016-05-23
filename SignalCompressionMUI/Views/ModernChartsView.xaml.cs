@@ -24,7 +24,6 @@ namespace SignalCompressionMUI.Views
         public ModernChartsView()
         {
             InitializeComponent();
-            DataContext = new ModernChartsViewModel();
         }
     }
 }

@@ -13,7 +13,7 @@ namespace SignalCompressionMUI.Models
         public int BlockRezultLength { get; set; }
         public int BlockRezultSize { get; set; }
         public ulong Additions { get; set; }
-        public ulong? Multiplications { get; set; }
+        public ulong Multiplications { get; set; }
         public float CompressionRatio => (float)BlockSourseSize/BlockRezultSize;
         public int RecursiveCalls { get; set; }
         public long Error { get; set; }
@@ -45,6 +45,8 @@ namespace SignalCompressionMUI.Models
                 total.BlockSourseSize += s.BlockSourseSize;
                 total.RecursiveCalls += s.RecursiveCalls;
                 total.Error += s.Error;
+                total.Multiplications += s.Multiplications;
+                total.Additions += s.Additions;
             }
             return total;
         }

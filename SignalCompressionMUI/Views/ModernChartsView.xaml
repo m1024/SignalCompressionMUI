@@ -7,18 +7,57 @@
              mc:Ignorable="d" 
              xmlns:chart="using:De.TorstenMandelkow.MetroChart"
              xmlns:metroChart="clr-namespace:De.TorstenMandelkow.MetroChart;assembly=De.TorstenMandelkow.MetroChart"
-             d:DesignHeight="300" d:DesignWidth="300">
-    <Grid Style="{StaticResource ContentRoot}">
-        <metroChart:PieChart ChartSubTitle="Population in millions" ChartTitle="Countries by population" Width="500" Height="500">
+             xmlns:viewModels="clr-namespace:SignalCompressionMUI.ViewModels"
+             d:DesignHeight="600" d:DesignWidth="1100">
+    <UserControl.Resources>
+        <viewModels:ModernChartsViewModel x:Key="Vm"/>
+    </UserControl.Resources>
+    <Grid Style="{StaticResource ContentRoot}" DataContext="{StaticResource ResourceKey=Vm}" Margin="0">
+        <!--<metroChart:PieChart ChartSubTitle="Population in millions" ChartTitle="Countries by population" Width="500" Height="500">
             <metroChart:PieChart.Series>
                 <metroChart:ChartSeries DisplayMember="Name"
                        ItemsSource="{Binding Path=Populations}"
                        ValueMember="Count" />
-
-                <metroChart:ChartSeries DisplayMember="Name"
-                       ItemsSource="{Binding Path=SmallestPopulations}"
-                       ValueMember="Count" />
             </metroChart:PieChart.Series>
-        </metroChart:PieChart>
+        </metroChart:PieChart>-->
+        <Grid>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition></ColumnDefinition>
+                <ColumnDefinition></ColumnDefinition>
+                <ColumnDefinition></ColumnDefinition>
+            </Grid.ColumnDefinitions>
+
+            <metroChart:ClusteredBarChart Grid.Column="0" ChartSubTitle="Сжатие разными алгоритмами" ChartTitle="Степень сжатия" ChartLegendVisibility="Collapsed" Margin="0 10 5 10">
+                <!--<metroChart:ClusteredBarChart.ChartLegendItemStyle>
+                    <Style TargetType="metroChart:ChartLegendItem">
+                        <Setter Property="BorderThickness" Value="5"></Setter>
+                        <Setter Property="Background" Value="Blue"></Setter>
+                    </Style>
+                </metroChart:ClusteredBarChart.ChartLegendItemStyle>-->
+                <metroChart:ClusteredBarChart.Series>
+                    <metroChart:ChartSeries DisplayMember="Name"
+                           ItemsSource="{Binding Path=CompressRatio}"
+                           ValueMember="Count" />
+                </metroChart:ClusteredBarChart.Series>
+            </metroChart:ClusteredBarChart>
+
+            <metroChart:ClusteredBarChart Grid.Column="1" ChartSubTitle="Потеря данных при преобразовании" ChartTitle="Погрешность" Margin="0 10 5 10">
+                <metroChart:ClusteredBarChart.Series>
+                    <metroChart:ChartSeries DisplayMember="Name"
+                           ItemsSource="{Binding Path=Errors}"
+                           ValueMember="Count" />
+
+                </metroChart:ClusteredBarChart.Series>
+            </metroChart:ClusteredBarChart>
+
+            <metroChart:ClusteredBarChart Grid.Column="2" ChartSubTitle="Время преобразования (мс)" ChartTitle="Время" Margin="0 10 0 10">
+                <metroChart:ClusteredBarChart.Series>
+                    <metroChart:ChartSeries DisplayMember="Name"
+                           ItemsSource="{Binding Path=Time}"
+                           ValueMember="Time" />
+
+                </metroChart:ClusteredBarChart.Series>
+            </metroChart:ClusteredBarChart>
+        </Grid>
     </Grid>
 </UserControl>

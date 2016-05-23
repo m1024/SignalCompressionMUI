@@ -24,3 +24,9 @@ F:\Git\SignalCompressionMUI\SignalCompressionUnitTest\bin\Debug\zh-tw\ZedGraph.r
 F:\Git\SignalCompressionMUI\SignalCompressionUnitTest\obj\Debug\SignalCompressionUnitTest.csprojResolveAssemblyReference.cache
 F:\Git\SignalCompressionMUI\SignalCompressionUnitTest\obj\Debug\SignalCompressionUnitTest.dll
 F:\Git\SignalCompressionMUI\SignalCompressionUnitTest\obj\Debug\SignalCompressionUnitTest.pdb
+F:\Git\SignalCompressionMUI\SignalCompressionUnitTest\bin\Debug\OxyPlot.Wpf.dll
+F:\Git\SignalCompressionMUI\SignalCompressionUnitTest\bin\Debug\OxyPlot.dll
+F:\Git\SignalCompressionMUI\SignalCompressionUnitTest\bin\Debug\OxyPlot.Wpf.pdb
+F:\Git\SignalCompressionMUI\SignalCompressionUnitTest\bin\Debug\OxyPlot.Wpf.xml
+F:\Git\SignalCompressionMUI\SignalCompressionUnitTest\bin\Debug\OxyPlot.pdb
+F:\Git\SignalCompressionMUI\SignalCompressionUnitTest\bin\Debug\OxyPlot.xml

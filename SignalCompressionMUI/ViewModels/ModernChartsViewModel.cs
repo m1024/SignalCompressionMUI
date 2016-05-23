@@ -1,49 +1,100 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using SignalCompressionMUI.Models;
 
 namespace SignalCompressionMUI.ViewModels
 {
-    class ModernChartsViewModel
+    class ModernChartsViewModel : INotifyPropertyChanged
     {
-        private readonly ObservableCollection<Population> _populations = new ObservableCollection<Population>();
-        public ObservableCollection<Population> Populations
+        private readonly ObservableCollection<ChartStat> _time = new ObservableCollection<ChartStat>();
+        public ObservableCollection<ChartStat> Time
         {
             get
             {
-                return _populations;
+                return _time;
             }
         }
 
-        private readonly ObservableCollection<Population> _smallestPopulations = new ObservableCollection<Population>();
-        public ObservableCollection<Population> SmallestPopulations
+        private readonly ObservableCollection<ChartStat> _errors = new ObservableCollection<ChartStat>();
+        public ObservableCollection<ChartStat> Errors
         {
             get
             {
-                return _smallestPopulations;
+                return _errors;
+            }
+        }
+
+        private readonly ObservableCollection<ChartStat> _compressRatio = new ObservableCollection<ChartStat>();
+        public ObservableCollection<ChartStat> CompressRatio
+        {
+            get
+            {
+                return _compressRatio;
             }
         }
 
         public ModernChartsViewModel()
         {
-            _populations.Add(new Population() { Name = "China", Count = 1340 });
-            _populations.Add(new Population() { Name = "India", Count = 1220 });
-            _populations.Add(new Population() { Name = "United States", Count = 309 });
-            _populations.Add(new Population() { Name = "Indonesia", Count = 240 });
-            _populations.Add(new Population() { Name = "Brazil", Count = 195 });
-            _populations.Add(new Population() { Name = "Pakistan", Count = 174 });
-            _populations.Add(new Population() { Name = "Nigeria", Count = 158 });
-
-            _smallestPopulations.Add(new Population() { Name = "Pitcairn Islands", Count = 48 });
-            _smallestPopulations.Add(new Population() { Name = "Cocos Keeling Islands", Count = 605 });
-            _smallestPopulations.Add(new Population() { Name = "Vatican City", Count = 826 });
-            _smallestPopulations.Add(new Population() { Name = "Niue", Count = 1000 });
-            _smallestPopulations.Add(new Population() { Name = "Tokelau", Count = 1416 });
-            _smallestPopulations.Add(new Population() { Name = "Christmas Island", Count = 1462 });
-            _smallestPopulations.Add(new Population() { Name = "Norfolk Island", Count = 2141 });
+            RDPModel.OnStatChanged += SetChartsStat;
+            WaveletModel.OnStatChanged += SetChartsStat;
+            SetChartsStat();
         }
+
+        private void SetChartsStat()
+        {
+            _compressRatio.Clear();
+            _compressRatio.Add(new ChartStat() {Name = "RDP", Count = RoundTo3(RDPModel.NothingStat.CompressionRatio)});
+            _compressRatio.Add(new ChartStat() { Name = "RDP_Rise", Count = RoundTo3(RDPModel.RiseStat.CompressionRatio) });
+            _compressRatio.Add(new ChartStat() { Name = "RDP_RleRise", Count = RoundTo3(RDPModel.RleRiseStat.CompressionRatio) });
+            _compressRatio.Add(new ChartStat() { Name = "RDP_HuffRise", Count = RoundTo3(RDPModel.HuffStat.CompressionRatio) });
+            _compressRatio.Add(new ChartStat() { Name = "WV", Count = RoundTo3(WaveletModel.NothingStat.CompressionRatio) });
+            _compressRatio.Add(new ChartStat() { Name = "WV_Rise", Count = RoundTo3(WaveletModel.RiseStat.CompressionRatio) });
+            _compressRatio.Add(new ChartStat() { Name = "WV_Rle", Count = RoundTo3(WaveletModel.RleStat.CompressionRatio) });
+            _compressRatio.Add(new ChartStat() { Name = "WV_RleRise", Count = RoundTo3(WaveletModel.RleRiseStat.CompressionRatio) });
+            _compressRatio.Add(new ChartStat() { Name = "WV_Huff", Count = RoundTo3(WaveletModel.HuffStat.CompressionRatio) });
+            _compressRatio.Add(new ChartStat() { Name = "WV_RleHuff", Count = RoundTo3(WaveletModel.RleHuffStat.CompressionRatio) });
+
+            _errors.Clear();
+            _errors.Add(new ChartStat() { Name = "RDP", Count = RoundTo3(RDPModel.NothingStat.Error) });
+            _errors.Add(new ChartStat() { Name = "RDP_Rise", Count = RoundTo3(RDPModel.RiseStat.Error) });
+            _errors.Add(new ChartStat() { Name = "RDP_RleRise", Count = RoundTo3(RDPModel.RleRiseStat.Error) });
+            _errors.Add(new ChartStat() { Name = "RDP_HuffRise", Count = RoundTo3(RDPModel.HuffStat.Error) });
+            _errors.Add(new ChartStat() { Name = "WV", Count = RoundTo3(WaveletModel.NothingStat.Error) });
+            _errors.Add(new ChartStat() { Name = "WV_Rise", Count = RoundTo3(WaveletModel.RiseStat.Error) });
+            _errors.Add(new ChartStat() { Name = "WV_Rle", Count = RoundTo3(WaveletModel.RleStat.Error) });
+            _errors.Add(new ChartStat() { Name = "WV_RleRise", Count = RoundTo3(WaveletModel.RleRiseStat.Error) });
+            _errors.Add(new ChartStat() { Name = "WV_Huff", Count = RoundTo3(WaveletModel.HuffStat.Error) });
+            _errors.Add(new ChartStat() { Name = "WV_RleHuff", Count = RoundTo3(WaveletModel.RleHuffStat.Error) });
+
+            _time.Clear();
+            _time.Add(new ChartStat() { Name = "RDP", Time = RDPModel.NothingStat.Time.Milliseconds });
+            _time.Add(new ChartStat() { Name = "RDP_Rise", Time = RDPModel.RiseStat.Time.Milliseconds });
+            _time.Add(new ChartStat() { Name = "RDP_RleRise", Time = RDPModel.RleRiseStat.Time.Milliseconds });
+            _time.Add(new ChartStat() { Name = "RDP_HuffRise", Time = RDPModel.HuffStat.Time.Milliseconds });
+            _time.Add(new ChartStat() { Name = "WV", Time = WaveletModel.NothingStat.Time.Milliseconds });
+            _time.Add(new ChartStat() { Name = "WV_Rise", Time = WaveletModel.RiseStat.Time.Milliseconds });
+            _time.Add(new ChartStat() { Name = "WV_Rle", Time = WaveletModel.RleStat.Time.Milliseconds });
+            _time.Add(new ChartStat() { Name = "WV_RleRise", Time = WaveletModel.RleRiseStat.Time.Milliseconds });
+            _time.Add(new ChartStat() { Name = "WV_Huff", Time = WaveletModel.HuffStat.Time.Milliseconds });
+            _time.Add(new ChartStat() { Name = "WV_RleHuff", Time = WaveletModel.RleHuffStat.Time.Milliseconds });
+        }
+
+        private double RoundTo3(double d) => d != d ? 0 : Math.Round(d, 3);
+
+        #region INotifyPropertyChanged
+
+        public event PropertyChangedEventHandler PropertyChanged;
+
+        protected virtual void OnPropertyChanged(string propertyName)
+        {
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+        }
+
+        #endregion
     }
 }

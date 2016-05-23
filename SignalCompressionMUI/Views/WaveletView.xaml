@@ -120,10 +120,7 @@
                   AutoGenerateColumns="False" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto" Visibility="{Binding StatVisibility}" >
             <DataGrid.Resources>
                 <DataTemplate x:Key="MyHeaderDataTemplate">
-                    <TextBlock VerticalAlignment="Center" FontStyle="Normal" FontWeight="Bold"
-                                                   TextAlignment="Center"
-                                                   Text="{TemplateBinding Content}"
-                                                   TextWrapping="Wrap" />
+                    <TextBlock VerticalAlignment="Center" FontStyle="Normal" FontWeight="Bold" TextAlignment="Center" Text="{TemplateBinding Content}" TextWrapping="Wrap" />
                 </DataTemplate>
             </DataGrid.Resources>
             <DataGrid.Columns>

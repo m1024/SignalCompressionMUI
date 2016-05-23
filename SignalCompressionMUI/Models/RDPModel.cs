@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using SignalCompressionMUI.Models.Algorithms;
+using SignalCompressionMUI.Models.Algorithms.Huffman;
 
 namespace SignalCompressionMUI.Models
 {
@@ -31,13 +32,63 @@ namespace SignalCompressionMUI.Models
 
     public static class RDPModel
     {
+        public static List<Statistic> Stat = new List<Statistic>();
         public static MyPoint[] PRez;
         public static short[] SequenceSmoothed;
-        public static short[] SequenceSourse;
         public static int MaxDeviationInd;
         public static int MinDeviationInd;
+        private static byte[] _compressed;
+        private static short[] _sequenceSourse;
+        private static bool _genStatChanged;
 
-        public static List<Statistic> Stat = new List<Statistic>();
+        public static bool GenStatChanged
+        {
+            get { return _genStatChanged; }
+            set
+            {
+                _genStatChanged = value;
+                if (_genStatChanged) OnStatChanged?.Invoke();
+            }
+        }
+
+        public static Statistic NothingStat { get; set; }
+        public static Statistic RiseStat { get; set; }
+        public static Statistic RleRiseStat { get; set; }
+        public static Statistic HuffStat { get; set; }
+
+        public static short[] SequenceSourse
+        {
+            get { return _sequenceSourse; }
+            set
+            {
+                _sequenceSourse = value;
+                OnSourseParsingComplete?.Invoke();
+            }
+        }
+
+        /// <summary>
+        /// Для записи в файл
+        /// </summary>
+        public static byte[] Compressed
+        {
+            get { return _compressed; }
+            set
+            {
+                _compressed = value;
+                OnCompressComplete?.Invoke();
+            }
+        }
+
+        /// <summary>
+        /// То что считали из файла
+        /// </summary>
+        public static byte[] CompressedFromFile { get; set; }
+
+        public delegate void ValueChangedHandler();
+        public static event ValueChangedHandler OnCompressComplete;
+        public static event ValueChangedHandler OnSourseParsingComplete;
+        public static event ValueChangedHandler OnStatChanged;
+
 
         public static void Read(string path)
         {
@@ -84,7 +135,6 @@ namespace SignalCompressionMUI.Models
             }
             return blocks.ToArray();
         }
-
 
         /// <summary>
         /// С разделением на X и Y
@@ -195,7 +245,8 @@ namespace SignalCompressionMUI.Models
         {
             var blocksShort = AccessoryFunc.DivideSequence(data, blockSize);
             var blocks = blocksShort.Select(ToMyPoints).ToList();
-            blocks.RemoveAt(blocks.Count - 1); //убрать последний
+            if (blocks.Last().Length != blockSize)
+                blocks.RemoveAt(blocks.Count - 1); //убрать последний
             SequenceSourse = SequenceSourse.ToList().GetRange(0, (int) (SequenceSourse.Length/blockSize)*blockSize).ToArray(); //и в исходной
             var newBlocks = new List<MyPoint[]>();
 
@@ -216,6 +267,8 @@ namespace SignalCompressionMUI.Models
                 var newBlock = AlgorithmRDP.DouglasPeucker(block, 0, block.Length-1, epsilon);
 
                 swatch.Stop();
+                st.Number = stat.Count;
+                st.Title = st.Number.ToString();
                 st.Time = swatch.Elapsed;
                 st.BlockRezultLength = newBlock.Length;
                 st.BlockRezultSize = newBlock.Length*3;
@@ -230,6 +283,54 @@ namespace SignalCompressionMUI.Models
 
             return newBlocks;
         }
+
+        public static List<MyPointLightArray> EncodeHuffmanHalf(List<MyPointLightArray> data)
+        {
+            var enc = new List<MyPointLightArray>();
+
+            foreach (var block in data)
+            {
+                enc.Add(new MyPointLightArray(AlgorithmDynHuff.Encode(block.X), block.Y));
+            }
+
+            return enc;
+        }
+
+        public static List<MyPointLightArray> DecodeHuffmanHalf(List<MyPointLightArray> data)
+        {
+            var dec = new List<MyPointLightArray>();
+
+            foreach (var block in data)
+            {
+                dec.Add(new MyPointLightArray(AlgorithmDynHuff.Decode(block.X), block.Y));
+            }
+
+            return dec;
+        }
+
+        public static List<MyPointLightArray> EncodeRle(List<MyPointLightArray> data)
+        {
+            var enc = new List<MyPointLightArray>();
+
+            foreach (var block in data)
+            {
+                enc.Add(new MyPointLightArray(AlgorithmRLE.Encode(block.X), block.Y));
+            }
+
+            return enc;
+        }
+
+        public static List<MyPointLightArray> DecodeRle(List<MyPointLightArray> data)
+        {
+            var dec = new List<MyPointLightArray>();
+
+            foreach (var block in data)
+            {
+                dec.Add(new MyPointLightArray(AlgorithmRLE.Decode(block.X), block.Y));
+            }
+
+            return dec;
+        } 
 
         public static List<List<byte[]>> EncodeRise(List<MyPointLightArray> data, out List<Statistic> stat)
         {

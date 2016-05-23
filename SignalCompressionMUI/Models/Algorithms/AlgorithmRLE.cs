@@ -171,7 +171,7 @@ namespace SignalCompressionMUI.Models.Algorithms
                 }
             }
 
-            //обработка последнего элемента (только не хватает обработки если последний элемент и есть 128й)
+            //обработка последнего элемента(только не хватает обработки если последний элемент и есть 128й)
             if (countSame > 0)
             {
                 if (countDiff > 0)
@@ -183,6 +183,11 @@ namespace SignalCompressionMUI.Models.Algorithms
             else if (countDiff > 0)
             {
                 encoded.Insert(index, (byte)(++countDiff | 128));
+                encoded.Add(previous);
+            }
+            else //послдений, после последовательности одинаковых
+            {
+                encoded.Add((byte)(1 | 128)); //то же что (1 << 1 | 1) - последовательность разных, длиной 1
                 encoded.Add(previous);
             }
 
