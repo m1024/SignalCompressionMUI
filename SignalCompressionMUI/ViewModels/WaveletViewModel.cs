@@ -25,7 +25,7 @@ namespace SignalCompressionMUI.ViewModels
         [Description("Четверть")]
         OneQuarter
     }
-    public enum CompressType : int { Nothing = 0, Rise = 1, Rle = 2, RiseRle = 3, Huffman = 4, RiseHuffman = 5}
+    public enum CompressType : int { Nothing = 0, Rise = 1, Rle = 2, RiseRle = 3, Huffman = 4, RleHuffman = 5, RiseRleAcDc = 6, RiseAcDc = 7, HuffmanRleAcDc = 8, RiseHuffman }
 
     class WaveletViewModel : INotifyPropertyChanged
     {
@@ -45,7 +45,7 @@ namespace SignalCompressionMUI.ViewModels
         private bool _compressTypeRle;
         private bool _compressTypeRiseRle;
         private bool _compressTypeHuffman;
-        private bool _compressTypeRiseHuffman;
+        private bool _compressTypeRleHuffman;
         private bool _saveIsEnabled;
         private bool _convertIsEnabled;
         private Visibility _statVisiblity;
@@ -250,14 +250,14 @@ namespace SignalCompressionMUI.ViewModels
                 OnPropertyChanged("CompressTypeHuffman");
             }
         }
-        public bool CompressTypeRiseHuffman
+        public bool CompressTypeRleHuffman
         {
-            get { return _compressTypeRiseHuffman; }
+            get { return _compressTypeRleHuffman; }
             set
             {
-                _compressTypeRiseHuffman = value;
-                if (value) CompressionType = CompressType.RiseHuffman;
-                OnPropertyChanged("CompressTypeRiseHuffman");
+                _compressTypeRleHuffman = value;
+                if (value) CompressionType = CompressType.RleHuffman;
+                OnPropertyChanged("CompressTypeRleHuffman");
             }
         }
 
@@ -304,6 +304,8 @@ namespace SignalCompressionMUI.ViewModels
         #endregion
 
         #region Methods
+
+        #region Background workers
 
         private void ConvertAssync()
         {
@@ -370,6 +372,8 @@ namespace SignalCompressionMUI.ViewModels
             PBar = Visibility.Hidden;
         }
 
+        #endregion
+
         private void ParsingSourseComplete()
         {
             ConvertIsEnabled = WaveletModel.SequenceSourse != null;
@@ -384,191 +388,364 @@ namespace SignalCompressionMUI.ViewModels
         {
             var stat = WaveletModel.Convert(WvType, CoeffCount, Rounding, BlockSize, Depth);
 
-            switch (CompressionType)
+            if (CompressTypeNothing)
             {
-                case CompressType.Nothing:
-                {
-                    #region Nothing
-                    WaveletModel.Compressed = null;
+                #region Nothing
 
-                    StatisticTable = stat;
-                    WaveletModel.Deconvert(_wvType, CoeffCount, Rounding);
+                WaveletModel.Compressed = null;
 
-                    Statistic.CalculateError(WaveletModel.SequenceSourse, WaveletModel.SequenceSmoothed, ref stat,
-                        BlockSize);
-                    stat.Insert(0, Statistic.CalculateTotal(stat));
-                    WaveletModel.NothingStat = stat.First();
-                    StatisticTable = stat;
-                    break;
+                WaveletModel.Deconvert(_wvType, CoeffCount, Rounding);
 
-                    #endregion
-                }
-                case CompressType.Rise:
-                {
-                    #region Rise
+                Statistic.CalculateError(WaveletModel.SequenceSourse, WaveletModel.SequenceSmoothed, ref stat,
+                    BlockSize);
+                stat.Insert(0, Statistic.CalculateTotal(stat));
+                WaveletModel.NothingStat = stat.First();
+                StatisticTable = stat;
 
-                    List<Statistic> statRise;
-                    var encoded = WaveletModel.EncodeRise(WaveletModel.ConvertedBlocks, out statRise);
-
-                    //сохранить
-                    WaveletModel.Compressed = AccessoryFunc.CreateForSaving(encoded, CompressionType);
-
-                    var statAll = new List<Statistic>();
-                    for (int i = 0; i < statRise.Count; i++)
-                    {
-                        var all = stat[i] + statRise[i];
-                        all.BlockRezultSize = statRise[i].BlockRezultSize;
-                        statAll.Add(all);
-                    }
-                    var decoded = WaveletModel.DecodeRise(encoded);
-                    WaveletModel.ConvertedBlocks = decoded;
-                    WaveletModel.Deconvert(_wvType, CoeffCount, Rounding);
-
-                    Statistic.CalculateError(WaveletModel.SequenceSourse, WaveletModel.SequenceSmoothed, ref statAll,
-                        BlockSize);
-                    statAll.Insert(0, Statistic.CalculateTotal(statAll));
-                    WaveletModel.RiseStat = statAll.First();
-                    StatisticTable = statAll;
-
-                    break;
-
-                    #endregion
-                }
-                case CompressType.Rle:
-                {
-                    #region Rle
-
-                    List<Statistic> statRle;
-                    var encoded = WaveletModel.EncodeRle(WaveletModel.ConvertedBlocks, out statRle);
-
-                    //сохранить
-                    WaveletModel.Compressed = AccessoryFunc.CreateForSaving(encoded, CompressionType);
-
-                    var statAll = new List<Statistic>();
-                    for (int i = 0; i < statRle.Count; i++)
-                    {
-                        var all = stat[i] + statRle[i];
-                        all.BlockRezultSize = statRle[i].BlockRezultSize;
-                        statAll.Add(all);
-                    }
-                    var decoded = WaveletModel.DecodeRle(encoded);
-
-                    WaveletModel.ConvertedBlocks = decoded;
-                    WaveletModel.Deconvert(_wvType, CoeffCount, Rounding);
-
-                    Statistic.CalculateError(WaveletModel.SequenceSourse, WaveletModel.SequenceSmoothed, ref statAll,
-                        BlockSize);
-                    statAll.Insert(0, Statistic.CalculateTotal(statAll));
-                    WaveletModel.RleStat = statAll.First();
-                    StatisticTable = statAll;
-
-                    break;
-
-                    #endregion
-                }
-                case CompressType.RiseRle:
-                {
-                    #region RiseRle
-
-                    List<Statistic> statRise;
-                    List<Statistic> statRle;
-                    var encRle = WaveletModel.EncodeRleShort(WaveletModel.ConvertedBlocks, out statRle, RleCount);
-                    var encoded = WaveletModel.EncodeRise(encRle, out statRise);
-
-                    //сохранить
-                    WaveletModel.Compressed = AccessoryFunc.CreateForSaving(encoded, CompressionType);
-
-                    var statAll = new List<Statistic>();
-                    for (int i = 0; i < statRise.Count; i++)
-                    {
-                        var all = stat[i] + statRise[i] + statRle[i];
-                        all.BlockRezultSize = statRise[i].BlockRezultSize;
-                        statAll.Add(all);
-                    }
-                    var decoded = WaveletModel.DecodeRise(encoded);
-                    var decRle = WaveletModel.DecodeRleShort(decoded, RleCount);
-
-                    WaveletModel.ConvertedBlocks = decRle;
-                    WaveletModel.Deconvert(_wvType, CoeffCount, Rounding);
-
-                    Statistic.CalculateError(WaveletModel.SequenceSourse, WaveletModel.SequenceSmoothed, ref statAll,
-                        BlockSize);
-                    statAll.Insert(0, Statistic.CalculateTotal(statAll));
-                    WaveletModel.RleRiseStat = statAll.First();
-                    StatisticTable = statAll;
-
-                    break;
-
-                    #endregion
-                }
-                case CompressType.Huffman:
-                {
-                    #region Huffman
-
-                    List<Statistic> statHuff;
-                    var encoded = WaveletModel.EncodeHuffman(WaveletModel.ConvertedBlocks, out statHuff);
-
-                    //сохранить
-                    WaveletModel.Compressed = AccessoryFunc.CreateForSaving(encoded, CompressionType);
-
-                    var statAll = new List<Statistic>();
-                    for (int i = 0; i < statHuff.Count; i++)
-                    {
-                        var all = stat[i] + statHuff[i];
-                        all.BlockRezultSize = statHuff[i].BlockRezultSize;
-                        statAll.Add(all);
-                    }
-                    var decoded = WaveletModel.DecodeHuffman(encoded);
-                    WaveletModel.ConvertedBlocks = decoded;
-                    WaveletModel.Deconvert(_wvType, CoeffCount, Rounding);
-
-                    Statistic.CalculateError(WaveletModel.SequenceSourse, WaveletModel.SequenceSmoothed, ref statAll,
-                        BlockSize);
-                    statAll.Insert(0, Statistic.CalculateTotal(statAll));
-                    WaveletModel.HuffStat = statAll.First();
-                    StatisticTable = statAll;
-
-                    break;
-
-                    #endregion
-                }
-                case CompressType.RiseHuffman:
-                {
-                    #region RiseHuff
-
-                    List<Statistic> statRle;
-                    List<Statistic> statHuff;
-                    var encRise = WaveletModel.EncodeRleShort(WaveletModel.ConvertedBlocks, out statRle, RleCount);
-                    var encHuff = WaveletModel.EncodeHuffman(encRise, out statHuff);
-
-                    //сохранить
-                    WaveletModel.Compressed = AccessoryFunc.CreateForSaving(encHuff, CompressionType);
-
-                    var statAll = new List<Statistic>();
-                    for (int i = 0; i < statRle.Count; i++)
-                    {
-                        var all = stat[i] + statRle[i] + statHuff[i];
-                        all.BlockRezultSize = statHuff[i].BlockRezultSize;
-                        statAll.Add(all);
-                    }
-
-                    var decHuff = WaveletModel.DecodeHuffman(encHuff);
-                    var decRise = WaveletModel.DecodeRleShort(decHuff, RleCount);
-
-                    WaveletModel.ConvertedBlocks = decRise;
-                    WaveletModel.Deconvert(_wvType, CoeffCount, Rounding);
-
-                    Statistic.CalculateError(WaveletModel.SequenceSourse, WaveletModel.SequenceSmoothed, ref statAll,
-                        BlockSize);
-                    statAll.Insert(0, Statistic.CalculateTotal(statAll));
-                    WaveletModel.RleHuffStat = statAll.First();
-                    StatisticTable = statAll;
-
-                    break;
-
-                    #endregion
-                }
+                #endregion
             }
+            if (CompressTypeRise)
+            {
+                #region Rise
+
+                List<Statistic> statRise;
+                var encoded = WaveletModel.EncodeRise(WaveletModel.ConvertedBlocks, out statRise);
+
+                //сохранить
+                WaveletModel.Compressed = AccessoryFunc.CreateForSaving(encoded, CompressionType);
+
+                var statAll = new List<Statistic>();
+                for (int i = 0; i < statRise.Count; i++)
+                {
+                    var all = stat[i] + statRise[i];
+                    all.BlockRezultSize = statRise[i].BlockRezultSize;
+                    statAll.Add(all);
+                }
+                var decoded = WaveletModel.DecodeRise(encoded);
+                WaveletModel.ConvertedBlocks = decoded;
+                WaveletModel.Deconvert(_wvType, CoeffCount, Rounding);
+
+                Statistic.CalculateError(WaveletModel.SequenceSourse, WaveletModel.SequenceSmoothed, ref statAll,
+                    BlockSize);
+                statAll.Insert(0, Statistic.CalculateTotal(statAll));
+                WaveletModel.RiseStat = statAll.First();
+                StatisticTable = statAll;
+
+                #endregion
+            }
+            if (CompressTypeRle)
+            {
+                #region Rle
+
+                List<Statistic> statRle;
+                var encoded = WaveletModel.EncodeRle(WaveletModel.ConvertedBlocks, out statRle);
+
+                //сохранить
+                WaveletModel.Compressed = AccessoryFunc.CreateForSaving(encoded, CompressionType);
+
+                var statAll = new List<Statistic>();
+                for (int i = 0; i < statRle.Count; i++)
+                {
+                    var all = stat[i] + statRle[i];
+                    all.BlockRezultSize = statRle[i].BlockRezultSize;
+                    statAll.Add(all);
+                }
+                var decoded = WaveletModel.DecodeRle(encoded);
+
+                WaveletModel.ConvertedBlocks = decoded;
+                WaveletModel.Deconvert(_wvType, CoeffCount, Rounding);
+
+                Statistic.CalculateError(WaveletModel.SequenceSourse, WaveletModel.SequenceSmoothed, ref statAll,
+                    BlockSize);
+                statAll.Insert(0, Statistic.CalculateTotal(statAll));
+                WaveletModel.RleStat = statAll.First();
+                StatisticTable = statAll;
+
+                #endregion
+            }
+            if (CompressTypeRiseRle)
+            {
+                #region RiseRle
+
+                List<Statistic> statRise;
+                List<Statistic> statRle;
+                var encRle = WaveletModel.EncodeRleShort(WaveletModel.ConvertedBlocks, out statRle, RleCount);
+                var encoded = WaveletModel.EncodeRise(encRle, out statRise);
+
+                //сохранить
+                WaveletModel.Compressed = AccessoryFunc.CreateForSaving(encoded, CompressionType);
+
+                var statAll = new List<Statistic>();
+                for (int i = 0; i < statRise.Count; i++)
+                {
+                    var all = stat[i] + statRise[i] + statRle[i];
+                    all.BlockRezultSize = statRise[i].BlockRezultSize;
+                    statAll.Add(all);
+                }
+                var decoded = WaveletModel.DecodeRise(encoded);
+                var decRle = WaveletModel.DecodeRleShort(decoded, RleCount);
+
+                WaveletModel.ConvertedBlocks = decRle;
+                WaveletModel.Deconvert(_wvType, CoeffCount, Rounding);
+
+                Statistic.CalculateError(WaveletModel.SequenceSourse, WaveletModel.SequenceSmoothed, ref statAll,
+                    BlockSize);
+                statAll.Insert(0, Statistic.CalculateTotal(statAll));
+                WaveletModel.RleRiseStat = statAll.First();
+                StatisticTable = statAll;
+
+                #endregion
+            }
+            if (CompressTypeHuffman)
+            {
+                #region Huffman
+
+                List<Statistic> statHuff;
+                var encoded = WaveletModel.EncodeHuffman(WaveletModel.ConvertedBlocks, out statHuff);
+
+                //сохранить
+                WaveletModel.Compressed = AccessoryFunc.CreateForSaving(encoded, CompressionType);
+
+                var statAll = new List<Statistic>();
+                for (int i = 0; i < statHuff.Count; i++)
+                {
+                    var all = stat[i] + statHuff[i];
+                    all.BlockRezultSize = statHuff[i].BlockRezultSize;
+                    statAll.Add(all);
+                }
+                var decoded = WaveletModel.DecodeHuffman(encoded);
+                WaveletModel.ConvertedBlocks = decoded;
+                WaveletModel.Deconvert(_wvType, CoeffCount, Rounding);
+
+                Statistic.CalculateError(WaveletModel.SequenceSourse, WaveletModel.SequenceSmoothed, ref statAll,
+                    BlockSize);
+                statAll.Insert(0, Statistic.CalculateTotal(statAll));
+                WaveletModel.HuffStat = statAll.First();
+                StatisticTable = statAll;
+
+                #endregion
+            }
+            if (CompressTypeRleHuffman)
+            {
+                #region RleHuff
+
+                List<Statistic> statRle;
+                List<Statistic> statHuff;
+                var encRise = WaveletModel.EncodeRleShort(WaveletModel.ConvertedBlocks, out statRle, RleCount);
+                var encHuff = WaveletModel.EncodeHuffman(encRise, out statHuff);
+
+                //сохранить
+                WaveletModel.Compressed = AccessoryFunc.CreateForSaving(encHuff, CompressionType);
+
+                var statAll = new List<Statistic>();
+                for (int i = 0; i < statRle.Count; i++)
+                {
+                    var all = stat[i] + statRle[i] + statHuff[i];
+                    all.BlockRezultSize = statHuff[i].BlockRezultSize;
+                    statAll.Add(all);
+                }
+
+                var decHuff = WaveletModel.DecodeHuffman(encHuff);
+                var decRise = WaveletModel.DecodeRleShort(decHuff, RleCount);
+
+                WaveletModel.ConvertedBlocks = decRise;
+                WaveletModel.Deconvert(_wvType, CoeffCount, Rounding);
+
+                Statistic.CalculateError(WaveletModel.SequenceSourse, WaveletModel.SequenceSmoothed, ref statAll,
+                    BlockSize);
+                statAll.Insert(0, Statistic.CalculateTotal(statAll));
+                WaveletModel.RleHuffStat = statAll.First();
+                StatisticTable = statAll;
+
+                #endregion
+            }
+
+            #region OldSwitch
+            //switch (CompressionType)
+            //{
+            //    case CompressType.Nothing:
+            //    {
+            //        #region Nothing
+            //        WaveletModel.Compressed = null;
+
+            //        WaveletModel.Deconvert(_wvType, CoeffCount, Rounding);
+
+            //        Statistic.CalculateError(WaveletModel.SequenceSourse, WaveletModel.SequenceSmoothed, ref stat,
+            //            BlockSize);
+            //        stat.Insert(0, Statistic.CalculateTotal(stat));
+            //        WaveletModel.NothingStat = stat.First();
+            //        StatisticTable = stat;
+            //        break;
+
+            //        #endregion
+            //    }
+            //    case CompressType.Rise:
+            //    {
+            //        #region Rise
+
+            //        List<Statistic> statRise;
+            //        var encoded = WaveletModel.EncodeRise(WaveletModel.ConvertedBlocks, out statRise);
+
+            //        //сохранить
+            //        WaveletModel.Compressed = AccessoryFunc.CreateForSaving(encoded, CompressionType);
+
+            //        var statAll = new List<Statistic>();
+            //        for (int i = 0; i < statRise.Count; i++)
+            //        {
+            //            var all = stat[i] + statRise[i];
+            //            all.BlockRezultSize = statRise[i].BlockRezultSize;
+            //            statAll.Add(all);
+            //        }
+            //        var decoded = WaveletModel.DecodeRise(encoded);
+            //        WaveletModel.ConvertedBlocks = decoded;
+            //        WaveletModel.Deconvert(_wvType, CoeffCount, Rounding);
+
+            //        Statistic.CalculateError(WaveletModel.SequenceSourse, WaveletModel.SequenceSmoothed, ref statAll,
+            //            BlockSize);
+            //        statAll.Insert(0, Statistic.CalculateTotal(statAll));
+            //        WaveletModel.RiseStat = statAll.First();
+            //        StatisticTable = statAll;
+
+            //        break;
+
+            //        #endregion
+            //    }
+            //    case CompressType.Rle:
+            //    {
+            //        #region Rle
+
+            //        List<Statistic> statRle;
+            //        var encoded = WaveletModel.EncodeRle(WaveletModel.ConvertedBlocks, out statRle);
+
+            //        //сохранить
+            //        WaveletModel.Compressed = AccessoryFunc.CreateForSaving(encoded, CompressionType);
+
+            //        var statAll = new List<Statistic>();
+            //        for (int i = 0; i < statRle.Count; i++)
+            //        {
+            //            var all = stat[i] + statRle[i];
+            //            all.BlockRezultSize = statRle[i].BlockRezultSize;
+            //            statAll.Add(all);
+            //        }
+            //        var decoded = WaveletModel.DecodeRle(encoded);
+
+            //        WaveletModel.ConvertedBlocks = decoded;
+            //        WaveletModel.Deconvert(_wvType, CoeffCount, Rounding);
+
+            //        Statistic.CalculateError(WaveletModel.SequenceSourse, WaveletModel.SequenceSmoothed, ref statAll,
+            //            BlockSize);
+            //        statAll.Insert(0, Statistic.CalculateTotal(statAll));
+            //        WaveletModel.RleStat = statAll.First();
+            //        StatisticTable = statAll;
+
+            //        break;
+
+            //        #endregion
+            //    }
+            //    case CompressType.RiseRle:
+            //    {
+            //        #region RiseRle
+
+            //        List<Statistic> statRise;
+            //        List<Statistic> statRle;
+            //        var encRle = WaveletModel.EncodeRleShort(WaveletModel.ConvertedBlocks, out statRle, RleCount);
+            //        var encoded = WaveletModel.EncodeRise(encRle, out statRise);
+
+            //        //сохранить
+            //        WaveletModel.Compressed = AccessoryFunc.CreateForSaving(encoded, CompressionType);
+
+            //        var statAll = new List<Statistic>();
+            //        for (int i = 0; i < statRise.Count; i++)
+            //        {
+            //            var all = stat[i] + statRise[i] + statRle[i];
+            //            all.BlockRezultSize = statRise[i].BlockRezultSize;
+            //            statAll.Add(all);
+            //        }
+            //        var decoded = WaveletModel.DecodeRise(encoded);
+            //        var decRle = WaveletModel.DecodeRleShort(decoded, RleCount);
+
+            //        WaveletModel.ConvertedBlocks = decRle;
+            //        WaveletModel.Deconvert(_wvType, CoeffCount, Rounding);
+
+            //        Statistic.CalculateError(WaveletModel.SequenceSourse, WaveletModel.SequenceSmoothed, ref statAll,
+            //            BlockSize);
+            //        statAll.Insert(0, Statistic.CalculateTotal(statAll));
+            //        WaveletModel.RleRiseStat = statAll.First();
+            //        StatisticTable = statAll;
+
+            //        break;
+
+            //        #endregion
+            //    }
+            //    case CompressType.Huffman:
+            //    {
+            //        #region Huffman
+
+            //        List<Statistic> statHuff;
+            //        var encoded = WaveletModel.EncodeHuffman(WaveletModel.ConvertedBlocks, out statHuff);
+
+            //        //сохранить
+            //        WaveletModel.Compressed = AccessoryFunc.CreateForSaving(encoded, CompressionType);
+
+            //        var statAll = new List<Statistic>();
+            //        for (int i = 0; i < statHuff.Count; i++)
+            //        {
+            //            var all = stat[i] + statHuff[i];
+            //            all.BlockRezultSize = statHuff[i].BlockRezultSize;
+            //            statAll.Add(all);
+            //        }
+            //        var decoded = WaveletModel.DecodeHuffman(encoded);
+            //        WaveletModel.ConvertedBlocks = decoded;
+            //        WaveletModel.Deconvert(_wvType, CoeffCount, Rounding);
+
+            //        Statistic.CalculateError(WaveletModel.SequenceSourse, WaveletModel.SequenceSmoothed, ref statAll,
+            //            BlockSize);
+            //        statAll.Insert(0, Statistic.CalculateTotal(statAll));
+            //        WaveletModel.HuffStat = statAll.First();
+            //        StatisticTable = statAll;
+
+            //        break;
+
+            //        #endregion
+            //    }
+            //    case CompressType.RiseHuffman:
+            //    {
+            //        #region RiseHuff
+
+            //        List<Statistic> statRle;
+            //        List<Statistic> statHuff;
+            //        var encRise = WaveletModel.EncodeRleShort(WaveletModel.ConvertedBlocks, out statRle, RleCount);
+            //        var encHuff = WaveletModel.EncodeHuffman(encRise, out statHuff);
+
+            //        //сохранить
+            //        WaveletModel.Compressed = AccessoryFunc.CreateForSaving(encHuff, CompressionType);
+
+            //        var statAll = new List<Statistic>();
+            //        for (int i = 0; i < statRle.Count; i++)
+            //        {
+            //            var all = stat[i] + statRle[i] + statHuff[i];
+            //            all.BlockRezultSize = statHuff[i].BlockRezultSize;
+            //            statAll.Add(all);
+            //        }
+
+            //        var decHuff = WaveletModel.DecodeHuffman(encHuff);
+            //        var decRise = WaveletModel.DecodeRleShort(decHuff, RleCount);
+
+            //        WaveletModel.ConvertedBlocks = decRise;
+            //        WaveletModel.Deconvert(_wvType, CoeffCount, Rounding);
+
+            //        Statistic.CalculateError(WaveletModel.SequenceSourse, WaveletModel.SequenceSmoothed, ref statAll,
+            //            BlockSize);
+            //        statAll.Insert(0, Statistic.CalculateTotal(statAll));
+            //        WaveletModel.RleHuffStat = statAll.First();
+            //        StatisticTable = statAll;
+
+            //        break;
+
+            //        #endregion
+            //    }
+            //}
+            #endregion
 
             var sourseSpectrum = Spectrum.CalculateSpectrum(WaveletModel.SequenceSourse);
             var newSpectrum = Spectrum.CalculateSpectrum(WaveletModel.SequenceSmoothed);
@@ -660,7 +837,7 @@ namespace SignalCompressionMUI.ViewModels
                     WaveletModel.Deconvert(_wvType, CoeffCount, Rounding);
                     break;
                 }
-                case CompressType.RiseHuffman:
+                case CompressType.RleHuffman:
                 {
                     var decHuff = WaveletModel.DecodeHuffman(dec);
                     var decRise = WaveletModel.DecodeRleShort(decHuff, RleCount);
@@ -753,7 +930,7 @@ namespace SignalCompressionMUI.ViewModels
             sheet.Cells[12, 3] = "Размер исходного блока (bytes)";
             sheet.Cells[12, 4] = "Размер нового блока (bytes)";
             sheet.Cells[12, 5] = "Коэффициент сжатия";
-            sheet.Cells[12, 6] = "Суммарная погрешность";
+            sheet.Cells[12, 6] = "Средняя погрешность, %";
 
             for (int i = 0; i < StatisticTable.Count; i++)
             {

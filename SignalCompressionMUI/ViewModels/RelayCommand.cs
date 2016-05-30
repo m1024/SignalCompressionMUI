@@ -14,14 +14,12 @@ namespace SignalCompressionMUI.ViewModels
 
         #endregion
 
-
         #region Properties
 
         public Predicate<object> CanExecuteDelegate { get; set; }
         public Action<object> ExecuteDelegate { get; set; }
 
         #endregion
-
 
         #region ICommand Members
 

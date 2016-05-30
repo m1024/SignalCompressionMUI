@@ -4,6 +4,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Threading;
+using System.Windows.Media.Animation;
 using SignalCompressionMUI.Models.Algorithms;
 using SignalCompressionMUI.ViewModels;
 
@@ -130,9 +131,79 @@ namespace SignalCompressionMUI.Models
             return res.ToArray();
         }
 
+        public static byte[] CreateForSavingDCT(List<List<byte[]>> data, CompressType type, int leaveCoef, int dcCount, double[] vector)
+        {
+            var outbytes = new List<byte>();
+
+            outbytes.Add((byte)type); //тип сжатия
+            outbytes.Add((byte)leaveCoef);
+            outbytes.Add((byte)dcCount);
+            outbytes.Add((byte)vector.Length);
+            foreach (var t in vector)
+                outbytes.AddRange(BitConverter.GetBytes((short)t));
+            outbytes.Add((byte) data.Count);
+
+            foreach (var block in data)
+            {
+                var subblocksCount = BitConverter.GetBytes((short)block.Count);
+                outbytes.AddRange(subblocksCount);
+
+                foreach (var subblock in block)
+                {
+                    var numsCount = BitConverter.GetBytes((short)subblock.Length);
+                    outbytes.AddRange(numsCount);
+                    outbytes.AddRange(subblock);
+                }
+            }
+
+            return outbytes.ToArray();
+        }
+
+        public static List<List<byte[]>> CreateFromSavingDCT(byte[] data, out CompressType type, out int leaveCoef, out int dcCount, out double[] vector)
+        {
+            int index = 0;
+            type = (CompressType)data[index++];
+            leaveCoef = data[index++];
+            dcCount = data[index++];
+            var len = data[index++];
+            vector = new double[len];
+            for (int i = 0; i < len; i++)
+            {
+                vector[i] = BitConverter.ToInt16(data, index);
+                index += 2;
+            }
+            var blocksCount = data[index++];
+
+            var sequence = new List<List<byte[]>>();
+            for (int i = 0; i < blocksCount; i++)
+            {
+                var block = new List<byte[]>();
+                var subblocksCount = BitConverter.ToInt16(data, index);
+                index += 2;
+
+                for (int j = 0; j < subblocksCount; j++)
+                {
+                    var numsCount = BitConverter.ToInt16(data, index);
+                    index += 2;
+
+                    var subblock = new byte[numsCount];
+                    Array.Copy(data, index, subblock, 0, numsCount);
+                    index += numsCount;
+
+                    block.Add(subblock);
+                }
+                sequence.Add(block);
+            }
+
+            return sequence;
+        }
+
         public static byte[] CreateForSaving(List<List<byte[]>> sequence, CompressType type)
         {
             var outbytes = new List<byte>();
+
+            //еще параметры которые использовались при конвертации надо добавить
+
             outbytes.Add((byte)type); //тип сжатия
             //в начало каждого списка и массива надо добавить его длину, причем в два байта и тип сжатия который использовался
             var blocksCount = BitConverter.GetBytes((short)sequence.Count);

@@ -67,16 +67,51 @@
             <TextBlock Margin="0 10 0 0">Метод сжатия:</TextBlock>
             <GroupBox  Margin="0 0 10 10">
                 <StackPanel Margin="0 10 0 0">
-                    <RadioButton Margin="10 4" IsChecked="{Binding CompressTypeNothing, Mode=TwoWay}">Без сжатия</RadioButton>
-                    <RadioButton Margin="10 4" IsChecked="{Binding CompressTypeRise, Mode=TwoWay}">Алгоритм Райса</RadioButton>
-                    <RadioButton Margin="10 4" IsChecked="{Binding CompressTypeRle, Mode=TwoWay}">RLE (byte)</RadioButton>
-                    <RadioButton Margin="10 4" IsChecked="{Binding CompressTypeRiseRle, Mode=TwoWay}">RLE(short) + Райс</RadioButton>
-                    <RadioButton Margin="10 4" IsChecked="{Binding CompressTypeHuffman, Mode=TwoWay}">Адаптивный Хаффман</RadioButton>
-                    <RadioButton Margin="10 4" IsChecked="{Binding CompressTypeRiseHuffman, Mode=TwoWay}">RLE + Хаффман</RadioButton>
+                    <CheckBox Margin="10 4" IsChecked="{Binding CompressTypeNothing, Mode=TwoWay}">Без сжатия</CheckBox>
+                    <CheckBox Margin="10 4" IsChecked="{Binding CompressTypeRise, Mode=TwoWay}">Алгоритм Райса</CheckBox>
+                    <CheckBox Margin="10 4" IsChecked="{Binding CompressTypeRle, Mode=TwoWay}">RLE (byte)</CheckBox>
+                    <CheckBox Margin="10 4" IsChecked="{Binding CompressTypeRiseRle, Mode=TwoWay}">RLE(short) + Райс</CheckBox>
+                    <CheckBox Margin="10 4" IsChecked="{Binding CompressTypeHuffman, Mode=TwoWay}">Адаптивный Хаффман</CheckBox>
+                    <CheckBox Margin="10 4" IsChecked="{Binding CompressTypeRleHuffman, Mode=TwoWay}">RLE + Хаффман</CheckBox>
                 </StackPanel>
             </GroupBox>
-            <!--<Button Command="{Binding ConvertCommand}" Margin="10">Преобразовать</Button>
-            <ProgressBar x:Name="ProgressBar" Minimum="0" Maximum="1" Height="16" IsIndeterminate="True" Margin="10" Visibility="{Binding Path=PBar, IsAsync=True}"/>-->
+            <StackPanel.Resources>
+                <Style TargetType="GroupBox">
+                    <Style.Resources>
+                        <ResourceDictionary />
+                    </Style.Resources>
+                    <Setter Property="Control.Template">
+                        <Setter.Value>
+                            <ControlTemplate TargetType="GroupBox">
+                                <Grid SnapsToDevicePixels="True">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="6" />
+                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="6" />
+                                    </Grid.ColumnDefinitions>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto" />
+                                        <RowDefinition Height="Auto" />
+                                        <RowDefinition Height="*" />
+                                        <RowDefinition Height="6" />
+                                    </Grid.RowDefinitions>
+                                    <Border BorderThickness="{TemplateBinding Border.BorderThickness}" CornerRadius="4,4,4,4" BorderBrush="#00FFFFFF" Background="{TemplateBinding Panel.Background}" Grid.Column="0" Grid.Row="1" Grid.ColumnSpan="4" Grid.RowSpan="3" />
+                                    <Border Padding="3,1,3,0" Name="Header" Grid.Column="1" Grid.Row="0" Grid.RowSpan="2">
+                                        <ContentPresenter RecognizesAccessKey="True" Content="{TemplateBinding HeaderedContentControl.Header}" ContentTemplate="{TemplateBinding HeaderedContentControl.HeaderTemplate}" ContentStringFormat="{TemplateBinding HeaderedContentControl.HeaderStringFormat}" ContentSource="Header" SnapsToDevicePixels="{TemplateBinding UIElement.SnapsToDevicePixels}" />
+                                    </Border>
+                                    <ContentPresenter Content="{TemplateBinding ContentControl.Content}" ContentTemplate="{TemplateBinding ContentControl.ContentTemplate}" ContentStringFormat="{TemplateBinding ContentControl.ContentStringFormat}" Margin="{TemplateBinding Control.Padding}" SnapsToDevicePixels="{TemplateBinding UIElement.SnapsToDevicePixels}" Grid.Column="1" Grid.Row="2" Grid.ColumnSpan="2" />
+                                    <Border BorderThickness="{TemplateBinding Border.BorderThickness}" CornerRadius="4,4,4,4" BorderBrush="Transparent" OpacityMask="{x:Null}" Grid.Row="1" Grid.ColumnSpan="4" Grid.RowSpan="3">
+                                        <Border BorderThickness="{TemplateBinding Border.BorderThickness}" CornerRadius="3,3,3,3" BorderBrush="{TemplateBinding Border.BorderBrush}">
+                                            <Border BorderThickness="{TemplateBinding Border.BorderThickness}" CornerRadius="2,2,2,2" BorderBrush="Transparent" />
+                                        </Border>
+                                    </Border>
+                                </Grid>
+                            </ControlTemplate>
+                        </Setter.Value>
+                    </Setter>
+                </Style>
+            </StackPanel.Resources>
         </StackPanel>
 
         <DockPanel Grid.Column="0" LastChildFill="false">
@@ -165,7 +200,7 @@
                     </DataGridTemplateColumn.CellTemplate>
                 </DataGridTemplateColumn>
 
-                <DataGridTemplateColumn Header="Суммарная погрешность" Width="*" HeaderTemplate="{StaticResource MyHeaderDataTemplate}" CanUserSort="True" SortMemberPath="Error">
+                <DataGridTemplateColumn Header="Средняя погрешность %" Width="*" HeaderTemplate="{StaticResource MyHeaderDataTemplate}" CanUserSort="True" SortMemberPath="Error">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
                             <TextBlock TextAlignment="Center" Text="{Binding Error}"/>

@@ -2,31 +2,77 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Security.Cryptography;
+using System.Windows.Forms;
 using SignalCompressionMUI.Models.Algorithms;
+using SignalCompressionMUI.Models.Algorithms.Huffman;
 using ZedGraph;
 
 namespace SignalCompressionMUI.Models
 {
-    class DCTModel
+    public static class DCTModel
     {
         public static short[] SequenceSmoothed;
-        public static short[] SequenceSourse;
-        public static int MaxDeviationInd;
-        public static int MinDeviationInd;
+        private static short[] _sequenceSourse;
         public static List<short[]> DcBlocks;
         public static List<short[]> AcBlocks;
         public static List<short[]> DcBlocksDecoded;
         public static List<short[]> AcBlocksDecoded;
 
-        public void Read(string path)
+        public static Statistic NothingStat { get; set; }
+        public static Statistic RiseStat { get; set; }
+        public static Statistic RiseRleStat { get; set; }
+        public static Statistic RiseRleAcDcStat { get; set; }
+        public static Statistic RiseAcDcStat { get; set; }
+        public static Statistic HuffmanStat { get; set; }
+        public static Statistic HuffmanRleAcDcStat { get; set; }
+
+        public static short[] SequenceSourse
+        {
+            get { return _sequenceSourse; }
+            set
+            {
+                _sequenceSourse = value;
+                OnSourseParsingComplete?.Invoke();
+            }
+        }
+
+        /// <summary>
+        /// Для записи в файл
+        /// </summary>
+        public static byte[] Compressed
+        {
+            get { return _compressed; }
+            set
+            {
+                _compressed = value;
+                OnCompressComplete?.Invoke();
+            }
+        }
+        private static byte[] _compressed;
+
+        /// <summary>
+        /// То что считали из файла
+        /// </summary>
+        public static byte[] CompressedFromFile { get; set; }
+
+        public static void Read(string path)
         {
             SequenceSourse = AccessoryFunc.ReadAndPrepare(path);
         }
 
+        private static bool _genStatChanged;
+
+        public static void StatChanged() => OnStatChanged?.Invoke();
+
+        public delegate void ValueChangedHandler();
+        public static event ValueChangedHandler OnCompressComplete;
+        public static event ValueChangedHandler OnSourseParsingComplete;
+        public static event ValueChangedHandler OnStatChanged;
+
         /// <summary>
         /// Обратное dct преобразование с разделением на dc и ac части
         /// </summary>
-        private short[] DctBlockDeconvertion(short[] block, int dcCoef, int coefCount)
+        private static short[] DctBlockDeconvertion(short[] block, int dcCoef, int coefCount)
         {
             var blockDc = new short[(int)(block.Length * (dcCoef / (float)coefCount))];
             var blockAc = new short[(int)(block.Length * ((coefCount - dcCoef) / (float)coefCount))];
@@ -81,7 +127,7 @@ namespace SignalCompressionMUI.Models
         /// <param name="block">Блок данных для преобразования</param>
         /// <param name="dcCoef">Число dc коэффициентов</param>
         /// <returns>Преобразованный блок (dc в начале, ac в конце)</returns>
-        private short[] DctBlockConvertion(short[] block, int dcCoef)
+        private static short[] DctBlockConvertion(short[] block, int dcCoef)
         {
             //нужно первые два коэффициента записывать отдельно
             var subBlocks = AccessoryFunc.DivideSequence(block, 8);
@@ -115,73 +161,64 @@ namespace SignalCompressionMUI.Models
         /// <param name="blockSizeStr">Размер блока</param>
         /// <param name="koefCount">Число коэффициентов которые надо сохранить</param>
         /// <param name="koefVector">Вектор коэффициентов</param>
-        /// <param name="convertedSequence">Последовательность после преобразования</param>
         /// <param name="dcCoef">8 коэффициентов dct преобразования делятся на две группы DC и AC. Параметр показывает сколько DC.</param>
         /// <returns></returns>
-        public List<Statistic> ConvertDct(string blockSizeStr, string koefCount, double[] koefVector,
-            out List<short[]> convertedSequence, string dcCoef)
+        public static List<short[]> ConvertDct(int blockSize, int koefCount, double[] koefVector, out List<Statistic> stat, int dcCoef)
         {
+            SequenceSourse = SequenceSourse.ToList().GetRange(0, (int)(SequenceSourse.Length / blockSize) * blockSize).ToArray();
+
             //размер блока должен быть кратен 8
-            if (int.Parse(blockSizeStr) % 8 != 0)
+            if (blockSize % 8 != 0)
                 throw new ArgumentException("Block size must divide on 8");
 
-            var stat = new List<Statistic>();
+            stat = new List<Statistic>();
 
             //задание параметров преобразования
-            AlgorithmDCT.KoefCount = int.Parse(koefCount);
+            AlgorithmDCT.KoefCount = koefCount;
             AlgorithmDCT.VectorKoef = koefVector;
 
-            var blocks = AccessoryFunc.DivideSequence(SequenceSourse, int.Parse(blockSizeStr));
+            var blocks = AccessoryFunc.DivideSequence(SequenceSourse, blockSize);
             var convertedBlocks = new List<short[]>();
+
             foreach (var block in blocks)
             {
                 var swatch = new System.Diagnostics.Stopwatch();
                 swatch.Start();
 
                 //деление на маленькие блоки по 8, их преобразование и склеивание обратно
-                var convertedBlock = DctBlockConvertion(block, int.Parse(dcCoef));
+                var convertedBlock = DctBlockConvertion(block, dcCoef);
                 convertedBlocks.Add(convertedBlock);
 
                 //остановка замера времени и подсчет статистики
                 swatch.Stop();
                 var blockStat = new Statistic
                 {
-                    BlockSourseSize = int.Parse(blockSizeStr) * 2,
+                    BlockSourseSize = blockSize * 2,
                     BlockRezultSize = convertedBlock.Length * 2,
-                    BlockRezultLength = int.Parse(blockSizeStr),
-                    Time = swatch.Elapsed
+                    BlockRezultLength = blockSize,
+                    Time = swatch.Elapsed,
+                    Number = stat.Count,
+                    Title = stat.Count.ToString()
                 };
                 //blockStat.CompressionRatio = blockStat.BlockSourseSize / (float)blockStat.BlockRezultSize;
                 stat.Add(blockStat);
             }
 
-            //добавление еще одного поля в начало - сумма всех (итого)
-            var total = new Statistic();
-            foreach (var s in stat)
-            {
-                total.Time += s.Time;
-                total.BlockSourseSize += s.BlockSourseSize;
-                total.BlockRezultSize += s.BlockRezultSize;
-            }
-            //total.CompressionRatio = total.BlockSourseSize / (float)total.BlockRezultSize;
-            stat.Insert(0, total);
-
             //результат преобразования
-            convertedSequence = convertedBlocks;
-            return stat;
+            return convertedBlocks;
         }
 
         /// <summary>
         /// Преобразование из коэффициентов DCT в SequenceSmoothed
         /// </summary>
-        public void DeconvertDct(List<short[]> convertedSequence, string blockSizeStr, string dcCoef)
+        public static short[] DeconvertDct(List<short[]> convertedSequence, int blockSizeStr, int dcCoef)
         {
             // длина блока возможно короче, т.к. не все коэффициенты сохранены
             //var blocks = DivideSequence(convertedSequence, (int)(int.Parse(blockSizeStr) * AlgorithmDCT.KoefCount / (float)8 ));
             var deconvertedBlocks =
-                convertedSequence.Select(block => DctBlockDeconvertion(block, int.Parse(dcCoef), AlgorithmDCT.KoefCount)).ToList();
+                convertedSequence.Select(block => DctBlockDeconvertion(block, dcCoef, AlgorithmDCT.KoefCount)).ToList();
 
-            SequenceSmoothed = AccessoryFunc.ConcatSequence(deconvertedBlocks);
+            return AccessoryFunc.ConcatSequence(deconvertedBlocks);
         }
 
         /// <summary>
@@ -190,7 +227,7 @@ namespace SignalCompressionMUI.Models
         /// <param name="blocks"></param>
         /// <param name="countAll"></param>
         /// <param name="countDc">Число dc коэффициентов</param>
-        public void DivideOnDcAc(List<short[]> blocks, int blockSize, int countAll = 4, int countDc = 1)
+        public static List<List<short[]>> DivideOnDcAc(List<short[]> blocks, int blockSize, int countAll = 4, int countDc = 1)
         {
             var dcBlocks = new List<short[]>();
             var acBlocks = new List<short[]>();
@@ -219,10 +256,11 @@ namespace SignalCompressionMUI.Models
 
             DcBlocks = dcBlocks;
             AcBlocks = acBlocks;
+            return new List<List<short[]>> { dcBlocks, acBlocks };
         }
 
 
-        public List<short[]> ConcatDcAc(List<short[]> DC, List<short[]> AC, int countAll = 4, int countDc = 1)
+        public static List<short[]> ConcatDcAc(List<short[]> DC, List<short[]> AC, int countAll = 4, int countDc = 1)
         {
             var countAc = countAll - countDc;
 
@@ -269,7 +307,7 @@ namespace SignalCompressionMUI.Models
         }
 
 
-        public List<Statistic> EncodeRiseNew(List<short[]> data, out List<byte[]> encodedBlocks)
+        public static List<Statistic> EncodeRiseNew(List<short[]> data, out List<byte[]> encodedBlocks)
         {
             encodedBlocks = new List<byte[]>();
             var statList = new List<Statistic>();
@@ -294,9 +332,37 @@ namespace SignalCompressionMUI.Models
             return statList;
         }
 
-        public List<short[]> DecodeRiseNew(List<byte[]> encoded) => encoded.Select(AlgorithmRise.Decode).ToList();
+        public static List<Statistic> EncodeHuffman(List<short[]> data, out List<byte[]> encodedBlocks)
+        {
+            encodedBlocks = new List<byte[]>();
+            var statList = new List<Statistic>();
 
-        public List<Statistic> EncodeRleNew(List<short[]> data, out List<short[]> encodedBlocks)
+            foreach (var block in data)
+            {
+                var stat = new Statistic();
+                var swatch = new System.Diagnostics.Stopwatch();
+                swatch.Start();
+
+                var encodedBlock = AlgorithmDynHuff.Encode(AccessoryFunc.ShortsToBytes(block));
+                encodedBlocks.Add(encodedBlock);
+
+                //остановка замера времени и подсчет статистики
+                swatch.Stop();
+                stat.Time = swatch.Elapsed;
+                stat.BlockRezultSize = encodedBlock.Length;
+                stat.BlockSourseSize = block.Length * 2;
+
+                statList.Add(stat);
+            }
+            return statList;
+        }
+
+        public static List<short[]> DecodeHuffman(List<byte[]> encoded) => encoded.Select(block => AccessoryFunc.BytesToShorts(AlgorithmDynHuff.Decode(block))).ToList();
+ 
+
+        public static List<short[]> DecodeRiseNew(List<byte[]> encoded) => encoded.Select(AlgorithmRise.Decode).ToList();
+
+        public static List<Statistic> EncodeRleNew(List<short[]> data, out List<short[]> encodedBlocks)
         {
             encodedBlocks = new List<short[]>();
             var statList = new List<Statistic>();
@@ -321,9 +387,9 @@ namespace SignalCompressionMUI.Models
             return statList;
         }
 
-        public List<short[]> DecodeRleNew(List<short[]> encoded) => encoded.Select(AlgorithmRLE.Decode).ToList();
+        public static List<short[]> DecodeRleNew(List<short[]> encoded) => encoded.Select(AlgorithmRLE.Decode).ToList();
 
-        public List<Statistic> EncodeRleNew(List<byte[]> data, out List<byte[]> encodedBlocks)
+        public static List<Statistic> EncodeRleNew(List<byte[]> data, out List<byte[]> encodedBlocks)
         {
             encodedBlocks = new List<byte[]>();
             var statList = new List<Statistic>();
@@ -348,7 +414,7 @@ namespace SignalCompressionMUI.Models
             return statList;
         }
 
-        public List<byte[]> DecodeRleNew(List<byte[]> encoded) => encoded.Select(AlgorithmRLE.Decode).ToList();
+        public static List<byte[]> DecodeRleNew(List<byte[]> encoded) => encoded.Select(AlgorithmRLE.Decode).ToList();
 
 
 
@@ -365,7 +431,7 @@ namespace SignalCompressionMUI.Models
         /// Тип следующего уровня кодирования: 0 - без кодирования, 1 - кодирование dc алгоритмом rle
         /// </param>
         /// <returns></returns>
-        public List<Statistic> EncodeRise(List<short[]> data, out List<byte[]> encodedBlocks,
+        public static List<Statistic> EncodeRise(List<short[]> data, out List<byte[]> encodedBlocks,
             string dcCoef, List<Statistic> statistic, int secondEncoding)
         {
             //var blocks = DivideSequence(data, (int)(int.Parse(blockSizeStr) * AlgorithmDCT.KoefCount / (float)8));
@@ -423,7 +489,7 @@ namespace SignalCompressionMUI.Models
             return stat.ToList();
         }
 
-        public void DecodeRise(List<byte[]> encodedBlocks, out List<short[]> decodedData, int secondEncoding)
+        public static void DecodeRise(List<byte[]> encodedBlocks, out List<short[]> decodedData, int secondEncoding)
         {
             var decodedBlocks = new List<short[]>();
             foreach (var encBlock in encodedBlocks)

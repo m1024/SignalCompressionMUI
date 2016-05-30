@@ -54,12 +54,14 @@ namespace SignalCompressionMUI.ViewModels
 
         private void GetSourseSpectrum()
         {
-            SpectrumSourse = OxyPlotSpectrumModel.SpectrumSourse.Select((t, i) => new DataPoint(i, t)).ToList();
+            var k = 5000f / OxyPlotSpectrumModel.SpectrumSourse.Length;
+            SpectrumSourse = OxyPlotSpectrumModel.SpectrumSourse.Select((t, i) => new DataPoint(i*k, t)).ToList();
         }
 
         private void GetNewSpectrum()
         {
-            SpectrumNew = OxyPlotSpectrumModel.SpectrumNew.Select((t, i) => new DataPoint(i, t)).ToList();
+            var k = 5000f / OxyPlotSpectrumModel.SpectrumNew.Length;
+            SpectrumNew = OxyPlotSpectrumModel.SpectrumNew.Select((t, i) => new DataPoint(i*k, t)).ToList();
         }
 
         #region INotifyPropertyChanged

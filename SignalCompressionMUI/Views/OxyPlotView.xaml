@@ -32,14 +32,14 @@
             <mui:ModernToggleButton ToolTip="Исходный график" IconData="{StaticResource LineIcon}" IsChecked="True" Margin="0 40 10 10" EllipseDiameter="36" IconWidth="25" IconHeight="25" Click="SourseGraph_OnClick"></mui:ModernToggleButton>
             <mui:ModernToggleButton ToolTip="Новый график" IconData="{StaticResource LineIcon}" IsChecked="True" Margin="0 10 10 10" EllipseDiameter="36" IconWidth="25" IconHeight="25" Click="NewGraph_OnClick"></mui:ModernToggleButton>
         </StackPanel>
-        <oxy:Plot Grid.Column="1" Background="Transparent" PlotAreaBorderColor="Gray" x:Name="Plot">
+        <oxy:Plot Grid.Column="1" Background="Transparent" PlotAreaBorderColor="Gray" x:Name="Plot" LegendTextColor="Gray">
             <oxy:Plot.Axes>
                 <oxy:LinearAxis Position="Bottom" TicklineColor="Gray" AxislineColor="Gray" TextColor="Gray" Title="Отсчеты" TitleColor="Gray"/>
                 <oxy:LinearAxis Position="Left" TicklineColor="Gray" TextColor="Gray"/>
             </oxy:Plot.Axes>
             <oxy:Plot.Series>
-                <oxy:LineSeries x:Name="SourseLineSeries" ItemsSource="{Binding CurveSourse}" Color="Red"/>
-                <oxy:LineSeries x:Name="NewLineSeries" ItemsSource="{Binding CurveNew}" Color="Green"/>
+                <oxy:LineSeries Title="Исходный сигнал" x:Name="SourseLineSeries" ItemsSource="{Binding CurveSourse}" Color="Red"/>
+                <oxy:LineSeries Title="Декодированный сигнал" x:Name="NewLineSeries" ItemsSource="{Binding CurveNew}" Color="Green"/>
             </oxy:Plot.Series>
         </oxy:Plot>
     </Grid>

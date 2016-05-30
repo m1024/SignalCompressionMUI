@@ -15,11 +15,11 @@
         </mui:LinkGroup>
         <mui:LinkGroup DisplayName="Графики">
             <mui:LinkGroup.Links>
+                <mui:Link DisplayName="Charts" Source="/Views/ModernChartsView.xaml" />
                 <mui:Link DisplayName="OxyPlot curves" Source="/Views/OxyPlotView.xaml" />
                 <mui:Link DisplayName="OxyPlot spectrum" Source="/Views/OxyPlotSpectrumView.xaml" />
                 <mui:Link DisplayName="ZedGraph curves" Source="/Views/ZedGraphView.xaml" />
                 <mui:Link DisplayName="ZedGraph spectrum" Source="/Views/ZedGraphSpectrumView.xaml" />
-                <mui:Link DisplayName="Charts" Source="/Views/ModernChartsView.xaml" />
             </mui:LinkGroup.Links>
         </mui:LinkGroup>
         <mui:LinkGroup DisplayName="Настройки">

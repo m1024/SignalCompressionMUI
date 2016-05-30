@@ -12,7 +12,7 @@ namespace SignalCompressionMUI.ViewModels
     {
         private string _name = string.Empty;
         private double _count = 0;
-        private int _time;
+        private double _time;
 
         public string Name
         {
@@ -41,7 +41,7 @@ namespace SignalCompressionMUI.ViewModels
 
         }
 
-        public int Time
+        public double Time
         {
             get
             {

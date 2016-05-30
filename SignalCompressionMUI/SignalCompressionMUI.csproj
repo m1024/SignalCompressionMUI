@@ -103,6 +103,7 @@
     <Compile Include="Models\WaveletArray.cs" />
     <Compile Include="Models\WaveletModel.cs" />
     <Compile Include="Models\WaveletTree.cs" />
+    <Compile Include="Models\ZedGraphModel.cs" />
     <Compile Include="ViewModels\AsyncDelegateCommand.cs" />
     <Compile Include="ViewModels\ChartStat.cs" />
     <Compile Include="ViewModels\DCTViewModel.cs" />
@@ -217,9 +218,6 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
-  </ItemGroup>
-  <ItemGroup>
-    <Content Include="License-LGPL.txt" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

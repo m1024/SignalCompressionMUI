@@ -41,6 +41,7 @@ namespace SignalCompressionMUI.ViewModels
         private bool _statColumnsFixed;
         private DataGridLength _colWidth;
 
+
         public Visibility AddAndMul
         {
             get { return _addAndMul; }
@@ -273,6 +274,8 @@ namespace SignalCompressionMUI.ViewModels
 
         public ICommand OpenInExcelCommand { get; set; }
 
+        public ICommand DoThis { get; set; }
+
         #endregion
 
         #region Methods
@@ -423,14 +426,15 @@ namespace SignalCompressionMUI.ViewModels
                 {
                     #region RiseRle
                     
+                    List<Statistic> statRle;
+                    var encRle = RDPModel.EncodeRle(encDeltaCut, out statRle);
                     List<Statistic> statRise;
-                    var encRle = RDPModel.EncodeRle(encDeltaCut);
                     var encRise = RDPModel.EncodeRise(encRle, out statRise);
 
                     var statAll = new List<Statistic>();
                     for (int i = 0; i < statRise.Count; i++)
                     {
-                        var all = stat[i] + statRise[i];
+                        var all = stat[i] + statRise[i] + statRle[i];
                         all.BlockRezultSize = statRise[i].BlockRezultSize;
                         statAll.Add(all);
                     }
@@ -459,18 +463,18 @@ namespace SignalCompressionMUI.ViewModels
                 {
                     #region RiseHuff
 
+                    List<Statistic> statHuff;
+                    var encHuffHalf = RDPModel.EncodeHuffmanHalf(encDeltaCut, out statHuff);
                     List<Statistic> statRise;
-                    var encHuffHalf = RDPModel.EncodeHuffmanHalf(encDeltaCut);
                     var encRise = RDPModel.EncodeRise(encHuffHalf, out statRise);
 
                     var statAll = new List<Statistic>();
                     for (int i = 0; i < statRise.Count; i++)
                     {
-                        var all = stat[i] + statRise[i];
+                        var all = stat[i] + statRise[i] + statHuff[i];
                         all.BlockRezultSize = statRise[i].BlockRezultSize;
                         statAll.Add(all);
                     }
-
 
                     var decRise = RDPModel.DecodeRise(encRise);
                     var decHuffHalf = RDPModel.DecodeHuffmanHalf(decRise);
@@ -484,7 +488,7 @@ namespace SignalCompressionMUI.ViewModels
                     Statistic.CalculateError(RDPModel.SequenceSourse, RDPModel.SequenceSmoothed, ref statAll,
                         BlockSize);
                     statAll.Insert(0, Statistic.CalculateTotal(statAll));
-                    RDPModel.HuffStat = statAll.First();
+                    RDPModel.RiseHuffStat = statAll.First();
                     StatisticTable = statAll;
 
                     break;
@@ -505,6 +509,48 @@ namespace SignalCompressionMUI.ViewModels
             ZedGraphView.CurveNew = ZedGraphView.ListToPointList(RDPModel.PRez);
             ZedGraphSpectrumView.SpectrumSourse = ZedGraphSpectrumView.ArrayToPointList(sourseSpectrum);
             ZedGraphSpectrumView.SpectrumNew = ZedGraphSpectrumView.ArrayToPointList(newSpectrum);
+        }
+
+        private void Do()
+        {
+            CompressType ct;
+            int e;
+            TryFindBest(1.5, 210, 20, BlockSize, out ct, out e);
+        }
+
+        /// <summary>
+        /// Попытка найти наиболее оптимальный метод для заданных условий
+        /// </summary>
+        private void TryFindBest(double compressRatio, double time, double error, int blockSize, out CompressType type, out int epsilon)
+        {
+            epsilon = 1;
+            double previousError = 0;
+            bool first = true;
+
+            while (true)
+            {
+                List<Statistic> stat;
+                var encRdp = RDPModel.ConvertRdp(out stat, RDPModel.SequenceSourse, blockSize, epsilon++);
+                var encDeltaCut = RDPModel.DeltaEncodeCut(encRdp);
+
+                var decDeltaCut = RDPModel.DeltaDecodedCut(encDeltaCut);
+                var decRdp = RDPModel.DeconvertRdp(decDeltaCut);
+
+                RDPModel.PRez = RDPModel.ConcatMyPoints(decDeltaCut);
+                RDPModel.SequenceSmoothed = decRdp;
+
+                Statistic.CalculateError(RDPModel.SequenceSourse, RDPModel.SequenceSmoothed, ref stat,
+                    BlockSize);
+                var total = Statistic.CalculateTotal(stat);
+
+                if (total.Error > error && first == false) break;
+
+                previousError = total.Error;
+                first = false;
+            }
+
+            type = CompressType.Rise;
+            epsilon = 1;
         }
 
         private void DecompressFile()
@@ -529,7 +575,7 @@ namespace SignalCompressionMUI.ViewModels
                     {
                         break;
                     }
-                case CompressType.RiseHuffman:
+                case CompressType.RleHuffman:
                     {
                         break;
                     }
@@ -619,7 +665,7 @@ namespace SignalCompressionMUI.ViewModels
             sheet.Cells[8, 3] = "Размер исходного блока (bytes)";
             sheet.Cells[8, 4] = "Размер нового блока (bytes)";
             sheet.Cells[8, 5] = "Коэффициент сжатия";
-            sheet.Cells[8, 6] = "Суммарная погрешность";
+            sheet.Cells[8, 6] = "Средняя погрешность, %";
             if (CompressionType == CompressType.Nothing)
             {
                 sheet.Cells[8, 7] = "Сложений";

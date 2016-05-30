@@ -2,6 +2,7 @@
 using System.ComponentModel;
 using System.Linq;
 using System.Windows.Media;
+using SignalCompressionMUI.Models;
 
 namespace SignalCompressionMUI.ViewModels
 {
@@ -11,8 +12,8 @@ namespace SignalCompressionMUI.ViewModels
     public class AppearanceViewModel
         : NotifyPropertyChanged
     {
-        private const string FontSmall = "small";
-        private const string FontLarge = "large";
+        private const string FontSmall = "мелкий";
+        private const string FontLarge = "обычный";
 
         // 9 accent colors from metro design principles
         /*private Color[] accentColors = new Color[]{
@@ -59,8 +60,8 @@ namespace SignalCompressionMUI.ViewModels
         public AppearanceViewModel()
         {
             // add the default themes
-            this.themes.Add(new Link { DisplayName = "dark", Source = AppearanceManager.DarkThemeSource });
-            this.themes.Add(new Link { DisplayName = "light", Source = AppearanceManager.LightThemeSource });
+            this.themes.Add(new Link { DisplayName = "темная", Source = AppearanceManager.DarkThemeSource });
+            this.themes.Add(new Link { DisplayName = "светлая", Source = AppearanceManager.LightThemeSource });
 
             this.SelectedFontSize = AppearanceManager.Current.FontSize == FontSize.Large ? FontLarge : FontSmall;
             SyncThemeAndColor();
@@ -112,6 +113,7 @@ namespace SignalCompressionMUI.ViewModels
 
                     // and update the actual theme
                     AppearanceManager.Current.ThemeSource = value.Source;
+                    ZedGraphModel.ThemeType = value.Source;
                 }
             }
         }

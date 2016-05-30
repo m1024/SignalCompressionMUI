@@ -17,7 +17,6 @@ namespace SignalCompressionMUI.Views
         public DCTView()
         {
             InitializeComponent();
-            DataContext = new DCTViewModel();
         }
     }
 }

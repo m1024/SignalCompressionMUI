@@ -54,7 +54,7 @@ namespace SignalCompressionMUI.Models
         public static Statistic NothingStat { get; set; }
         public static Statistic RiseStat { get; set; }
         public static Statistic RleRiseStat { get; set; }
-        public static Statistic HuffStat { get; set; }
+        public static Statistic RiseHuffStat { get; set; }
 
         public static short[] SequenceSourse
         {
@@ -284,13 +284,27 @@ namespace SignalCompressionMUI.Models
             return newBlocks;
         }
 
-        public static List<MyPointLightArray> EncodeHuffmanHalf(List<MyPointLightArray> data)
+        public static List<MyPointLightArray> EncodeHuffmanHalf(List<MyPointLightArray> data, out List<Statistic> stat)
         {
             var enc = new List<MyPointLightArray>();
+            stat = new List<Statistic>();
 
             foreach (var block in data)
             {
+                #region замеры
+                var blockstat = new Statistic();
+                var swatch = new System.Diagnostics.Stopwatch();
+                swatch.Start();
+                #endregion
+
                 enc.Add(new MyPointLightArray(AlgorithmDynHuff.Encode(block.X), block.Y));
+
+                #region замеры
+                swatch.Stop();
+                blockstat.BlockRezultSize = enc.Last().X.Length + enc.Last().Y.Length;
+                blockstat.Time = swatch.Elapsed;
+                stat.Add(blockstat);
+                #endregion
             }
 
             return enc;
@@ -308,13 +322,27 @@ namespace SignalCompressionMUI.Models
             return dec;
         }
 
-        public static List<MyPointLightArray> EncodeRle(List<MyPointLightArray> data)
+        public static List<MyPointLightArray> EncodeRle(List<MyPointLightArray> data, out List<Statistic> stat)
         {
             var enc = new List<MyPointLightArray>();
+            stat = new List<Statistic>();
 
             foreach (var block in data)
             {
+                #region замеры
+                var blockstat = new Statistic();
+                var swatch = new System.Diagnostics.Stopwatch();
+                swatch.Start();
+                #endregion
+
                 enc.Add(new MyPointLightArray(AlgorithmRLE.Encode(block.X), block.Y));
+
+                #region замеры
+                swatch.Stop();
+                blockstat.BlockRezultSize = enc.Last().X.Length + enc.Last().Y.Length;
+                blockstat.Time = swatch.Elapsed;
+                stat.Add(blockstat);
+                #endregion
             }
 
             return enc;

@@ -61,7 +61,6 @@ F:\Git\SignalCompressionMUI\SignalCompressionMUI\bin\Debug\zh-cn\ZedGraph.resour
 F:\Git\SignalCompressionMUI\SignalCompressionMUI\bin\Debug\zh-tw\ZedGraph.resources.dll
 F:\Git\SignalCompressionMUI\SignalCompressionMUI\obj\Debug\Views\ZedGraphView.baml
 F:\Git\SignalCompressionMUI\SignalCompressionMUI\obj\Debug\Views\ZedGraphView.g.cs
-F:\Git\SignalCompressionMUI\SignalCompressionMUI\obj\Debug\SignalCompressionMUI_Content.g.cs
 F:\Git\SignalCompressionMUI\SignalCompressionMUI\obj\Debug\Views\DCTView.baml
 F:\Git\SignalCompressionMUI\SignalCompressionMUI\obj\Debug\Views\DCTView.g.cs
 F:\Git\SignalCompressionMUI\SignalCompressionMUI\obj\Debug\Views\ZedGraphSpectrumView.baml

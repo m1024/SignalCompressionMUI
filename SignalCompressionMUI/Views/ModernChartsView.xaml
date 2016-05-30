@@ -27,7 +27,7 @@
                 <ColumnDefinition></ColumnDefinition>
             </Grid.ColumnDefinitions>
 
-            <metroChart:ClusteredBarChart Grid.Column="0" ChartSubTitle="Сжатие разными алгоритмами" ChartTitle="Степень сжатия" ChartLegendVisibility="Collapsed" Margin="0 10 5 10">
+            <metroChart:ClusteredBarChart Grid.Column="0" ChartSubTitle="Сжатие разными алгоритмами (раз)" ChartTitle="Степень сжатия" ChartLegendVisibility="Collapsed" Margin="0 10 5 10">
                 <!--<metroChart:ClusteredBarChart.ChartLegendItemStyle>
                     <Style TargetType="metroChart:ChartLegendItem">
                         <Setter Property="BorderThickness" Value="5"></Setter>
@@ -41,7 +41,7 @@
                 </metroChart:ClusteredBarChart.Series>
             </metroChart:ClusteredBarChart>
 
-            <metroChart:ClusteredBarChart Grid.Column="1" ChartSubTitle="Потеря данных при преобразовании" ChartTitle="Погрешность" Margin="0 10 5 10">
+            <metroChart:ClusteredBarChart Grid.Column="1" ChartSubTitle="Потеря данных при преобразовании (%)" ChartTitle="Погрешность" Margin="0 10 5 10">
                 <metroChart:ClusteredBarChart.Series>
                     <metroChart:ChartSeries DisplayMember="Name"
                            ItemsSource="{Binding Path=Errors}"
