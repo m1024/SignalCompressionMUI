@@ -8,8 +8,12 @@
     <Grid>
         <ScrollViewer>
             <StackPanel MinWidth="200">
-                <TextBlock Text="ABOUT" Style="{StaticResource Heading2}" />
-                <TextBlock Text="TODO: provide information about the software" Margin="0,0,0,8" TextWrapping="Wrap" />
+                <TextBlock Text="О ПРОГРАММЕ" Style="{StaticResource Heading2}" Margin="0 0 0 10"/>
+                <TextBlock Text="Программа для сравнения алгоритмов сжатия сигналов миограмм." Margin="0,0,0,8" TextWrapping="Wrap" />
+                <TextBlock Text="В основе лежат 3 алгоритма преобразований: Рамера-Дугласа-Пекера, дискретное косинус преобразование и вейвлет преобразование." Margin="0,0,0,8" TextWrapping="Wrap" />
+                <TextBlock Text="Алгоритм Рамера-Дугласа-Пекера (RDP) был выбран исходя из графической интерпретации сжимаемого сигнала, сжатие осуществляется за счет упрощения полигональной цепи." Margin="0,0,0,8" TextWrapping="Wrap" />
+                <TextBlock Text="Дискретное косинусное преобразование (DCT) – одно из ортогональных преобразований. Суть преобразования заключается в разложении вектора состоящего из 8 отсчетов на 8 базисных векторов, представляющих из себя косинусоиды различной периодичности. " Margin="0,0,0,8" TextWrapping="Wrap" />
+                <TextBlock Text="Вейвлет-преобразование (Wavelet transform) — интегральное преобразование, которое представляет собой свертку вейвлет-функции с сигналом." Margin="0,0,0,8" TextWrapping="Wrap" />
             </StackPanel>
         </ScrollViewer>
     </Grid>

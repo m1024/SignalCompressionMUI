@@ -198,14 +198,76 @@ namespace SignalCompressionMUI.Models
             return sequence;
         }
 
-        public static byte[] CreateForSaving(List<List<byte[]>> sequence, CompressType type)
+        public static byte[] CreateForSavingWv(List<List<byte[]>> sequence, CompressType encType, WaveletType wvType, СoeffCount coeffCount, int round, int depth, int rleCount)
+        {
+            var outbytes = new List<byte>();
+            outbytes.Add((byte)wvType);
+            outbytes.Add((byte)coeffCount);
+            outbytes.Add((byte)round);
+            outbytes.Add((byte)depth);
+            outbytes.Add((byte)rleCount);
+            outbytes.Add((byte)encType); //тип сжатия
+            //в начало каждого списка и массива надо добавить его длину, причем в два байта и тип сжатия который использовался
+            var blocksCount = BitConverter.GetBytes((short)sequence.Count);
+            outbytes.AddRange(blocksCount);
+
+            foreach (var block in sequence)
+            {
+                var subblocksCount = BitConverter.GetBytes((short)block.Count);
+                outbytes.AddRange(subblocksCount);
+
+                foreach (var subblock in block)
+                {
+                    var numsCount = BitConverter.GetBytes((short)subblock.Length);
+                    outbytes.AddRange(numsCount);
+                    outbytes.AddRange(subblock);
+                }
+            }
+            return outbytes.ToArray();
+        }
+
+        public static List<List<byte[]>> CreateFromSavingWv(byte[] data, out CompressType encType, out WaveletType wvType, out СoeffCount coeffCount, out int round, out int depth, out int rleCount)
+        {
+            int index = 0;
+            wvType = (WaveletType) data[index++];
+            coeffCount = (СoeffCount) data[index++];
+            round = data[index++];
+            depth = data[index++];
+            rleCount = data[index++];
+            encType = (CompressType)data[index++];
+            var blocksCount = BitConverter.ToInt16(data, index);
+            index += 2;
+
+            var sequence = new List<List<byte[]>>();
+            for (int i = 0; i < blocksCount; i++)
+            {
+                var block = new List<byte[]>();
+                var subblocksCount = BitConverter.ToInt16(data, index);
+                index += 2;
+
+                for (int j = 0; j < subblocksCount; j++)
+                {
+                    var numsCount = BitConverter.ToInt16(data, index);
+                    index += 2;
+
+                    var subblock = new byte[numsCount];
+                    Array.Copy(data, index, subblock, 0, numsCount);
+                    index += numsCount;
+
+                    block.Add(subblock);
+                }
+                sequence.Add(block);
+            }
+            return sequence;
+        }
+
+        public static byte[] CreateForSavingRDP(List<List<byte[]>> sequence, CompressType type, int epsilon)
         {
             var outbytes = new List<byte>();
 
-            //еще параметры которые использовались при конвертации надо добавить
-
+            outbytes.Add((byte)epsilon);
             outbytes.Add((byte)type); //тип сжатия
-            //в начало каждого списка и массива надо добавить его длину, причем в два байта и тип сжатия который использовался
+
             var blocksCount = BitConverter.GetBytes((short)sequence.Count);
             outbytes.AddRange(blocksCount);
 
@@ -221,15 +283,15 @@ namespace SignalCompressionMUI.Models
                     outbytes.AddRange(subblock);
                 }
             }
-
             return outbytes.ToArray();
         }
 
-        public static List<List<byte[]>> CreateFromSaving(byte[] data, out CompressType type)
+        public static List<List<byte[]>> CreateFromSaving(byte[] data, out CompressType type, out int epsilon)
         {
-            type = (CompressType) data[0];
-            var blocksCount = BitConverter.ToInt16(data, 1);
-            int index = 3;
+            epsilon = data[0];
+            type = (CompressType) data[1];
+            var blocksCount = BitConverter.ToInt16(data, 2);
+            int index = 4;
 
             var sequence = new List<List<byte[]>>();
             for (int i = 0; i < blocksCount; i++)

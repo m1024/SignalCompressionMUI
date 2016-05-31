@@ -10,12 +10,13 @@
             <mui:LinkGroup.Links>
                 <mui:Link DisplayName="Ramer-Douglas-Peucker" Source="/Views/RDPView.xaml" />
                 <mui:Link DisplayName="Discrete cosine transform" Source="/Views/DCTView.xaml" />
-                <mui:Link DisplayName="Wavelet" Source="/Views/WaveletView.xaml" />
+                <mui:Link DisplayName="Wavelet transform" Source="/Views/WaveletView.xaml" />
             </mui:LinkGroup.Links>
         </mui:LinkGroup>
         <mui:LinkGroup DisplayName="Графики">
             <mui:LinkGroup.Links>
-                <mui:Link DisplayName="Charts" Source="/Views/ModernChartsView.xaml" />
+                <mui:Link DisplayName="Bar charts" Source="/Views/ModernChartsView.xaml" />
+                <!--<mui:Link DisplayName="OxyPlot charts" Source="/Views/OxyPlotChartView.xaml" />-->
                 <mui:Link DisplayName="OxyPlot curves" Source="/Views/OxyPlotView.xaml" />
                 <mui:Link DisplayName="OxyPlot spectrum" Source="/Views/OxyPlotSpectrumView.xaml" />
                 <mui:Link DisplayName="ZedGraph curves" Source="/Views/ZedGraphView.xaml" />
@@ -30,8 +31,8 @@
     </mui:ModernWindow.MenuLinkGroups>
     
     <mui:ModernWindow.TitleLinks>
-        <mui:Link DisplayName="settings" Source="/Views/Settings/SettingsPage.xaml" />
-        <mui:Link DisplayName="help" Source="https://github.com/firstfloorsoftware/mui" />
+        <mui:Link DisplayName="Настройки" Source="/Views/Settings/SettingsPage.xaml" />
+        <mui:Link DisplayName="Помощь" Source="https://github.com/firstfloorsoftware/mui" />
     </mui:ModernWindow.TitleLinks>
 
     <!--<mui:ModernWindow.MenuLinkGroups>

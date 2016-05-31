@@ -27,7 +27,6 @@ F:\Git\SignalCompressionMUI\SignalCompressionMUI\bin\Debug\SignalCompressionMUI.
 F:\Git\SignalCompressionMUI\SignalCompressionMUI\bin\Debug\SignalCompressionMUI.pdb
 F:\Git\SignalCompressionMUI\SignalCompressionMUI\bin\Debug\FirstFloor.ModernUI.dll
 F:\Git\SignalCompressionMUI\SignalCompressionMUI\bin\Debug\FirstFloor.ModernUI.xml
-F:\Git\SignalCompressionMUI\SignalCompressionMUI\obj\Debug\SignalCompressionMUI.csprojResolveAssemblyReference.cache
 F:\Git\SignalCompressionMUI\SignalCompressionMUI\obj\Debug\Views\MainWindowView.baml
 F:\Git\SignalCompressionMUI\SignalCompressionMUI\obj\Debug\Views\RDPView.baml
 F:\Git\SignalCompressionMUI\SignalCompressionMUI\obj\Debug\Views\Settings\About.baml
@@ -85,3 +84,6 @@ F:\Git\SignalCompressionMUI\SignalCompressionMUI\obj\Debug\Views\OxyPlotView.bam
 F:\Git\SignalCompressionMUI\SignalCompressionMUI\obj\Debug\Views\OxyPlotView.g.cs
 F:\Git\SignalCompressionMUI\SignalCompressionMUI\obj\Debug\Views\OxyPlotSpectrumView.g.cs
 F:\Git\SignalCompressionMUI\SignalCompressionMUI\obj\Debug\Views\OxyPlotSpectrumView.baml
+F:\Git\SignalCompressionMUI\SignalCompressionMUI\obj\Debug\Views\OxyPlotChartView.baml
+F:\Git\SignalCompressionMUI\SignalCompressionMUI\obj\Debug\Views\OxyPlotChartView.g.cs
+F:\Git\SignalCompressionMUI\SignalCompressionMUI\obj\Debug\SignalCompressionMUI.csprojResolveAssemblyReference.cache

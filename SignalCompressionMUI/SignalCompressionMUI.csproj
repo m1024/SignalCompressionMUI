@@ -109,9 +109,13 @@
     <Compile Include="ViewModels\DCTViewModel.cs" />
     <Compile Include="ViewModels\EnumHelper.cs" />
     <Compile Include="ViewModels\ModernChartsViewModel.cs" />
+    <Compile Include="ViewModels\OxyPlotChartViewModel.cs" />
     <Compile Include="ViewModels\OxyPlotSpectrumViewModel.cs" />
     <Compile Include="ViewModels\OxyPlotViewModel.cs" />
     <Compile Include="ViewModels\WaveletViewModel.cs" />
+    <Compile Include="Views\OxyPlotChartView.xaml.cs">
+      <DependentUpon>OxyPlotChartView.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Views\DCTView.xaml.cs">
       <DependentUpon>DCTView.xaml</DependentUpon>
     </Compile>
@@ -133,6 +137,10 @@
     <Compile Include="Views\ZedGraphView.xaml.cs">
       <DependentUpon>ZedGraphView.xaml</DependentUpon>
     </Compile>
+    <Page Include="Views\OxyPlotChartView.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="Views\DCTView.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>

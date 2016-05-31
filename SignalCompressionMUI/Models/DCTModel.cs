@@ -60,8 +60,6 @@ namespace SignalCompressionMUI.Models
             SequenceSourse = AccessoryFunc.ReadAndPrepare(path);
         }
 
-        private static bool _genStatChanged;
-
         public static void StatChanged() => OnStatChanged?.Invoke();
 
         public delegate void ValueChangedHandler();

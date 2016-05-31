@@ -15,17 +15,7 @@ namespace SignalCompressionMUI.Models
         public static Statistic HuffStat { get; set; }
         public static Statistic RleHuffStat { get; set; }
 
-        private static bool _genStatChanged;
-
-        public static bool GenStatChanged
-        {
-            get { return _genStatChanged; }
-            set
-            {
-                _genStatChanged = value;
-                if (_genStatChanged) OnStatChanged?.Invoke();
-            }
-        }
+        public static void StatChanged() => OnStatChanged?.Invoke();
 
         public static short[] SequenceSmoothed { get; set; }
         private static short[] _sequenceSourse;

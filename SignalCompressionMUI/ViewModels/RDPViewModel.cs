@@ -255,6 +255,7 @@ namespace SignalCompressionMUI.ViewModels
             ConvertCommand = new RelayCommand(arg => ConvertAssync());
             SaveCommand = new RelayCommand(arg => SaveFile());
             OpenInExcelCommand = new RelayCommand(arg => OpenInExcelAssync());
+            ClearAllCommand = new RelayCommand(arg => ClearAll());
             //ConvertCommand = new RelayCommand(arg => Convert());
 
             CompressTypeNothing = true;
@@ -275,6 +276,8 @@ namespace SignalCompressionMUI.ViewModels
         public ICommand OpenInExcelCommand { get; set; }
 
         public ICommand DoThis { get; set; }
+
+        public ICommand ClearAllCommand { get; set; }
 
         #endregion
 
@@ -302,7 +305,7 @@ namespace SignalCompressionMUI.ViewModels
             if (e.Error != null)
                 ModernDialog.ShowMessage(e.Error.Message, "Ошибка", MessageBoxButton.OK);
             PBar = Visibility.Hidden;
-            RDPModel.GenStatChanged = true;
+            RDPModel.StatChanged();
         }
 
         private void ConvertAssync()
@@ -364,137 +367,146 @@ namespace SignalCompressionMUI.ViewModels
             var encRdp = RDPModel.ConvertRdp(out stat, RDPModel.SequenceSourse, BlockSize, Epsilon);
             var encDeltaCut = RDPModel.DeltaEncodeCut(encRdp);
 
-            switch (CompressionType)
+
+            if (CompressTypeNothing)
             {
-                case CompressType.Nothing:
+                #region Nothing
+
+                var decDeltaCut = RDPModel.DeltaDecodedCut(encDeltaCut);
+                var decRdp = RDPModel.DeconvertRdp(decDeltaCut);
+
+                RDPModel.PRez = RDPModel.ConcatMyPoints(decDeltaCut);
+                RDPModel.SequenceSmoothed = decRdp;
+
+                var statAll = stat.Select(s => s.Clone()).ToList();
+
+                Statistic.CalculateError(RDPModel.SequenceSourse, RDPModel.SequenceSmoothed, ref statAll,
+                    BlockSize);
+                statAll.Insert(0, Statistic.CalculateTotal(statAll));
+                RDPModel.NothingStat = statAll.First();
+                StatisticTable = statAll;
+
+                #endregion
+            }
+            if (CompressTypeRise)
+            {
+                #region Rise
+
+                stat = new List<Statistic>();
+                encRdp = RDPModel.ConvertRdp(out stat, RDPModel.SequenceSourse, BlockSize, Epsilon);
+                encDeltaCut = RDPModel.DeltaEncodeCut(encRdp);
+
+                List<Statistic> statRise;
+                var encRise = RDPModel.EncodeRise(encDeltaCut, out statRise);
+
+                //сохранить в файл
+                RDPModel.Compressed = AccessoryFunc.CreateForSavingRDP(encRise, CompressionType, Epsilon);
+
+                var statAll = new List<Statistic>();
+                for (int i = 0; i < statRise.Count; i++)
                 {
-                    #region Nothing
-
-                    var decDeltaCut = RDPModel.DeltaDecodedCut(encDeltaCut);
-                    var decRdp = RDPModel.DeconvertRdp(decDeltaCut);
-
-                    RDPModel.PRez = RDPModel.ConcatMyPoints(decDeltaCut);
-                    RDPModel.SequenceSmoothed = decRdp;
-
-                    Statistic.CalculateError(RDPModel.SequenceSourse, RDPModel.SequenceSmoothed, ref stat,
-                        BlockSize);
-                    stat.Insert(0, Statistic.CalculateTotal(stat));
-                    RDPModel.NothingStat = stat.First();
-                    StatisticTable = stat;
-                    break;
-
-                    #endregion
+                    var all = stat[i] + statRise[i];
+                    all.BlockRezultSize = statRise[i].BlockRezultSize;
+                    statAll.Add(all);
                 }
-                case CompressType.Rise:
+
+
+                var decRise = RDPModel.DecodeRise(encRise);
+                var decDeltaCut = RDPModel.DeltaDecodedCut(decRise);
+                var decRdp = RDPModel.DeconvertRdp(decDeltaCut);
+
+                RDPModel.PRez = RDPModel.ConcatMyPoints(decDeltaCut);
+                RDPModel.SequenceSmoothed = decRdp;
+
+
+                Statistic.CalculateError(RDPModel.SequenceSourse, RDPModel.SequenceSmoothed, ref statAll,
+                    BlockSize);
+                statAll.Insert(0, Statistic.CalculateTotal(statAll));
+                RDPModel.RiseStat = statAll.First();
+                StatisticTable = statAll;
+
+                #endregion
+            }
+            if (CompressTypeRiseRle)
+            {
+                #region RiseRle
+
+                stat = new List<Statistic>();
+                encRdp = RDPModel.ConvertRdp(out stat, RDPModel.SequenceSourse, BlockSize, Epsilon);
+                encDeltaCut = RDPModel.DeltaEncodeCut(encRdp);
+
+                List<Statistic> statRle;
+                var encRle = RDPModel.EncodeRle(encDeltaCut, out statRle);
+                List<Statistic> statRise;
+                var encRise = RDPModel.EncodeRise(encRle, out statRise);
+
+                //сохранить в файл
+                RDPModel.Compressed = AccessoryFunc.CreateForSavingRDP(encRise, CompressionType, Epsilon);
+
+                var statAll = new List<Statistic>();
+                for (int i = 0; i < statRise.Count; i++)
                 {
-                    #region Rise
-
-                    List<Statistic> statRise;
-                    var encRise = RDPModel.EncodeRise(encDeltaCut, out statRise);
-
-                    //сохранить в файл
-                    RDPModel.Compressed = AccessoryFunc.CreateForSaving(encRise, CompressionType);
-
-                    var statAll = new List<Statistic>();
-                    for (int i = 0; i < statRise.Count; i++)
-                    {
-                        var all = stat[i] + statRise[i];
-                        all.BlockRezultSize = statRise[i].BlockRezultSize;
-                        statAll.Add(all);
-                    }
-
-
-                    var decRise = RDPModel.DecodeRise(encRise);
-                    var decDeltaCut = RDPModel.DeltaDecodedCut(decRise);
-                    var decRdp = RDPModel.DeconvertRdp(decDeltaCut);
-
-                    RDPModel.PRez = RDPModel.ConcatMyPoints(decDeltaCut);
-                    RDPModel.SequenceSmoothed = decRdp;
-
-
-                    Statistic.CalculateError(RDPModel.SequenceSourse, RDPModel.SequenceSmoothed, ref statAll,
-                        BlockSize);
-                    statAll.Insert(0, Statistic.CalculateTotal(statAll));
-                    RDPModel.RiseStat = statAll.First();
-                    StatisticTable = statAll;
-
-                    break;
-
-                    #endregion
+                    var all = stat[i] + statRise[i] + statRle[i];
+                    all.BlockRezultSize = statRise[i].BlockRezultSize;
+                    statAll.Add(all);
                 }
-                case CompressType.RiseRle:
+
+                var decRise = RDPModel.DecodeRise(encRise);
+                var decRle = RDPModel.DecodeRle(decRise);
+                var decDeltaCut = RDPModel.DeltaDecodedCut(decRle);
+                var decRdp = RDPModel.DeconvertRdp(decDeltaCut);
+
+                RDPModel.PRez = RDPModel.ConcatMyPoints(decDeltaCut);
+                RDPModel.SequenceSmoothed = decRdp;
+
+                Models.Statistic.CalculateError(RDPModel.SequenceSourse, RDPModel.SequenceSmoothed, ref statAll,
+                    BlockSize);
+                statAll.Insert(0, Models.Statistic.CalculateTotal(statAll));
+                RDPModel.RleRiseStat = statAll.First();
+                StatisticTable = statAll;
+
+                #endregion
+            }
+            if (CompressTypeRiseHuffman)
+            {
+                #region RiseHuff
+
+                stat = new List<Statistic>();
+                encRdp = RDPModel.ConvertRdp(out stat, RDPModel.SequenceSourse, BlockSize, Epsilon);
+                encDeltaCut = RDPModel.DeltaEncodeCut(encRdp);
+
+                List<Statistic> statHuff;
+                var encHuffHalf = RDPModel.EncodeHuffmanHalf(encDeltaCut, out statHuff);
+                List<Statistic> statRise;
+                var encRise = RDPModel.EncodeRise(encHuffHalf, out statRise);
+
+                //сохранить в файл
+                RDPModel.Compressed = AccessoryFunc.CreateForSavingRDP(encRise, CompressionType, Epsilon);
+
+                var statAll = new List<Statistic>();
+                for (int i = 0; i < statRise.Count; i++)
                 {
-                    #region RiseRle
-                    
-                    List<Statistic> statRle;
-                    var encRle = RDPModel.EncodeRle(encDeltaCut, out statRle);
-                    List<Statistic> statRise;
-                    var encRise = RDPModel.EncodeRise(encRle, out statRise);
-
-                    var statAll = new List<Statistic>();
-                    for (int i = 0; i < statRise.Count; i++)
-                    {
-                        var all = stat[i] + statRise[i] + statRle[i];
-                        all.BlockRezultSize = statRise[i].BlockRezultSize;
-                        statAll.Add(all);
-                    }
-
-
-                    var decRise = RDPModel.DecodeRise(encRise);
-                    var decRle = RDPModel.DecodeRle(decRise);
-                    var decDeltaCut = RDPModel.DeltaDecodedCut(decRle);
-                    var decRdp = RDPModel.DeconvertRdp(decDeltaCut);
-
-                    RDPModel.PRez = RDPModel.ConcatMyPoints(decDeltaCut);
-                    RDPModel.SequenceSmoothed = decRdp;
-
-
-                    Models.Statistic.CalculateError(RDPModel.SequenceSourse, RDPModel.SequenceSmoothed, ref statAll,
-                        BlockSize);
-                    statAll.Insert(0, Models.Statistic.CalculateTotal(statAll));
-                    RDPModel.RleRiseStat = statAll.First();
-                    StatisticTable = statAll;
-
-                    break;
-
-                    #endregion
+                    var all = stat[i] + statRise[i] + statHuff[i];
+                    all.BlockRezultSize = statRise[i].BlockRezultSize;
+                    statAll.Add(all);
                 }
-                case CompressType.RiseHuffman:
-                {
-                    #region RiseHuff
 
-                    List<Statistic> statHuff;
-                    var encHuffHalf = RDPModel.EncodeHuffmanHalf(encDeltaCut, out statHuff);
-                    List<Statistic> statRise;
-                    var encRise = RDPModel.EncodeRise(encHuffHalf, out statRise);
+                var decRise = RDPModel.DecodeRise(encRise);
+                var decHuffHalf = RDPModel.DecodeHuffmanHalf(decRise);
+                var decDeltaCut = RDPModel.DeltaDecodedCut(decHuffHalf);
+                var decRdp = RDPModel.DeconvertRdp(decDeltaCut);
 
-                    var statAll = new List<Statistic>();
-                    for (int i = 0; i < statRise.Count; i++)
-                    {
-                        var all = stat[i] + statRise[i] + statHuff[i];
-                        all.BlockRezultSize = statRise[i].BlockRezultSize;
-                        statAll.Add(all);
-                    }
-
-                    var decRise = RDPModel.DecodeRise(encRise);
-                    var decHuffHalf = RDPModel.DecodeHuffmanHalf(decRise);
-                    var decDeltaCut = RDPModel.DeltaDecodedCut(decHuffHalf);
-                    var decRdp = RDPModel.DeconvertRdp(decDeltaCut);
-
-                    RDPModel.PRez = RDPModel.ConcatMyPoints(decDeltaCut);
-                    RDPModel.SequenceSmoothed = decRdp;
+                RDPModel.PRez = RDPModel.ConcatMyPoints(decDeltaCut);
+                RDPModel.SequenceSmoothed = decRdp;
 
 
-                    Statistic.CalculateError(RDPModel.SequenceSourse, RDPModel.SequenceSmoothed, ref statAll,
-                        BlockSize);
-                    statAll.Insert(0, Statistic.CalculateTotal(statAll));
-                    RDPModel.RiseHuffStat = statAll.First();
-                    StatisticTable = statAll;
+                Statistic.CalculateError(RDPModel.SequenceSourse, RDPModel.SequenceSmoothed, ref statAll,
+                    BlockSize);
+                statAll.Insert(0, Statistic.CalculateTotal(statAll));
+                RDPModel.RiseHuffStat = statAll.First();
+                StatisticTable = statAll;
 
-                    break;
-
-                    #endregion
-                }
+                #endregion
             }
 
             var sourseSpectrum = Spectrum.CalculateSpectrum(RDPModel.SequenceSourse);
@@ -556,7 +568,14 @@ namespace SignalCompressionMUI.ViewModels
         private void DecompressFile()
         {
             CompressType type;
-            var dec = AccessoryFunc.CreateFromSaving(RDPModel.CompressedFromFile, out type);
+            int epsilon;
+            var dec = AccessoryFunc.CreateFromSaving(RDPModel.CompressedFromFile, out type, out epsilon);
+            Epsilon = epsilon;
+            CompressionType = type;
+            CompressTypeNothing = CompressionType == CompressType.Nothing;
+            CompressTypeRise = CompressionType == CompressType.Rise;
+            CompressTypeHuffman = CompressionType == CompressType.Huffman;
+            CompressTypeRiseHuffman = CompressionType == CompressType.RiseHuffman;
 
             switch (type)
             {
@@ -573,10 +592,26 @@ namespace SignalCompressionMUI.ViewModels
                     }
                 case CompressType.RiseRle:
                     {
+                        var decRise = RDPModel.DecodeRise(dec);
+                        var decRle = RDPModel.DecodeRle(decRise);
+                        var decDeltaCut = RDPModel.DeltaDecodedCut(decRle);
+                        var decRdp = RDPModel.DeconvertRdp(decDeltaCut);
+
+                        RDPModel.PRez = RDPModel.ConcatMyPoints(decDeltaCut);
+                        RDPModel.SequenceSmoothed = decRdp;
+
                         break;
                     }
-                case CompressType.RleHuffman:
+                case CompressType.RiseHuffman:
                     {
+                        var decRise = RDPModel.DecodeRise(dec);
+                        var decHuffHalf = RDPModel.DecodeHuffmanHalf(decRise);
+                        var decDeltaCut = RDPModel.DeltaDecodedCut(decHuffHalf);
+                        var decRdp = RDPModel.DeconvertRdp(decDeltaCut);
+
+                        RDPModel.PRez = RDPModel.ConcatMyPoints(decDeltaCut);
+                        RDPModel.SequenceSmoothed = decRdp;
+
                         break;
                     }
             }
@@ -714,6 +749,34 @@ namespace SignalCompressionMUI.ViewModels
                     ModernDialog.ShowMessage(ex.Message, "Результат операции", MessageBoxButton.OK);
                 }
             }
+        }
+
+        private void ClearAll()
+        {
+            RDPModel.SequenceSourse = null;
+            RDPModel.SequenceSmoothed = null;
+            RDPModel.Compressed = null;
+            RDPModel.CompressedFromFile = null;
+            RDPModel.NothingStat = new Statistic();
+            RDPModel.RiseStat = new Statistic();
+            RDPModel.RleRiseStat = new Statistic();
+            RDPModel.RiseHuffStat = new Statistic();
+            StatisticTable = null;
+            FileName = "";
+            RDPModel.StatChanged();
+
+            var sourseSpectrum = Spectrum.CalculateSpectrum(RDPModel.SequenceSourse);
+            var newSpectrum = Spectrum.CalculateSpectrum(RDPModel.SequenceSmoothed);
+
+            OxyPlotModel.SequenceSourse = RDPModel.SequenceSourse ?? new short[1];
+            OxyPlotModel.SequenceNew = RDPModel.SequenceSmoothed ?? new short[1];
+            OxyPlotSpectrumModel.SpectrumSourse = sourseSpectrum;
+            OxyPlotSpectrumModel.SpectrumNew = newSpectrum;
+
+            ZedGraphView.CurveSourse = ZedGraphView.ListToPointList(RDPModel.SequenceSourse);
+            ZedGraphView.CurveNew = ZedGraphView.ListToPointList(RDPModel.SequenceSmoothed);
+            ZedGraphSpectrumView.SpectrumSourse = ZedGraphSpectrumView.ArrayToPointList(sourseSpectrum);
+            ZedGraphSpectrumView.SpectrumNew = ZedGraphSpectrumView.ArrayToPointList(newSpectrum);
         }
 
         #endregion

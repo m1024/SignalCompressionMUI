@@ -30,3 +30,5 @@ F:\Git\SignalCompressionMUI\SignalCompressionUnitTest\bin\Debug\OxyPlot.Wpf.pdb
 F:\Git\SignalCompressionMUI\SignalCompressionUnitTest\bin\Debug\OxyPlot.Wpf.xml
 F:\Git\SignalCompressionMUI\SignalCompressionUnitTest\bin\Debug\OxyPlot.pdb
 F:\Git\SignalCompressionMUI\SignalCompressionUnitTest\bin\Debug\OxyPlot.xml
+F:\Git\SignalCompressionMUI\SignalCompressionUnitTest\bin\Debug\SignalCompressionUnitTest.dll.CodeAnalysisLog.xml
+F:\Git\SignalCompressionMUI\SignalCompressionUnitTest\bin\Debug\SignalCompressionUnitTest.dll.lastcodeanalysissucceeded

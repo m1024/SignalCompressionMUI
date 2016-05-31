@@ -285,6 +285,7 @@ namespace SignalCompressionMUI.ViewModels
             ConvertCommand = new RelayCommand(arg => ConvertAssync());
             SaveCommand = new RelayCommand(arg => SaveFile());
             OpenInExcelCommand = new RelayCommand(arg => OpenInExcelAssync());
+            ClearAllCommand = new RelayCommand(arg => ClearAll());
 
             CompressTypeNothing = true;
             PBar = Visibility.Hidden;
@@ -300,6 +301,8 @@ namespace SignalCompressionMUI.ViewModels
         public ICommand SaveCommand { get; set; }
 
         public ICommand OpenInExcelCommand { get; set; }
+
+        public ICommand ClearAllCommand { get; set; }
 
         #endregion
 
@@ -355,7 +358,7 @@ namespace SignalCompressionMUI.ViewModels
             if (e.Error != null)
                 ModernDialog.ShowMessage(e.Error.Message, "Ошибка", MessageBoxButton.OK);
             PBar = Visibility.Hidden;
-            WaveletModel.GenStatChanged = true;
+            WaveletModel.StatChanged();
         }
 
         private void bwExcel_DoWork(object sender, DoWorkEventArgs e)
@@ -396,23 +399,25 @@ namespace SignalCompressionMUI.ViewModels
 
                 WaveletModel.Deconvert(_wvType, CoeffCount, Rounding);
 
-                Statistic.CalculateError(WaveletModel.SequenceSourse, WaveletModel.SequenceSmoothed, ref stat,
+                var statAll = stat.Select(s => s.Clone()).ToList();
+
+                Statistic.CalculateError(WaveletModel.SequenceSourse, WaveletModel.SequenceSmoothed, ref statAll,
                     BlockSize);
-                stat.Insert(0, Statistic.CalculateTotal(stat));
-                WaveletModel.NothingStat = stat.First();
-                StatisticTable = stat;
+                statAll.Insert(0, Statistic.CalculateTotal(statAll));
+                WaveletModel.NothingStat = statAll.First();
+                StatisticTable = statAll;
 
                 #endregion
             }
             if (CompressTypeRise)
             {
                 #region Rise
-
+                stat = WaveletModel.Convert(WvType, CoeffCount, Rounding, BlockSize, Depth);
                 List<Statistic> statRise;
                 var encoded = WaveletModel.EncodeRise(WaveletModel.ConvertedBlocks, out statRise);
 
                 //сохранить
-                WaveletModel.Compressed = AccessoryFunc.CreateForSaving(encoded, CompressionType);
+                WaveletModel.Compressed = AccessoryFunc.CreateForSavingWv(encoded, CompressionType, WvType, CoeffCount, Rounding, Depth, RleCount);
 
                 var statAll = new List<Statistic>();
                 for (int i = 0; i < statRise.Count; i++)
@@ -436,12 +441,12 @@ namespace SignalCompressionMUI.ViewModels
             if (CompressTypeRle)
             {
                 #region Rle
-
+                stat = WaveletModel.Convert(WvType, CoeffCount, Rounding, BlockSize, Depth);
                 List<Statistic> statRle;
                 var encoded = WaveletModel.EncodeRle(WaveletModel.ConvertedBlocks, out statRle);
 
                 //сохранить
-                WaveletModel.Compressed = AccessoryFunc.CreateForSaving(encoded, CompressionType);
+                WaveletModel.Compressed = AccessoryFunc.CreateForSavingWv(encoded, CompressionType, WvType, CoeffCount, Rounding, Depth, RleCount);
 
                 var statAll = new List<Statistic>();
                 for (int i = 0; i < statRle.Count; i++)
@@ -466,14 +471,14 @@ namespace SignalCompressionMUI.ViewModels
             if (CompressTypeRiseRle)
             {
                 #region RiseRle
-
+                stat = WaveletModel.Convert(WvType, CoeffCount, Rounding, BlockSize, Depth);
                 List<Statistic> statRise;
                 List<Statistic> statRle;
                 var encRle = WaveletModel.EncodeRleShort(WaveletModel.ConvertedBlocks, out statRle, RleCount);
                 var encoded = WaveletModel.EncodeRise(encRle, out statRise);
 
                 //сохранить
-                WaveletModel.Compressed = AccessoryFunc.CreateForSaving(encoded, CompressionType);
+                WaveletModel.Compressed = AccessoryFunc.CreateForSavingWv(encoded, CompressionType, WvType, CoeffCount, Rounding, Depth, RleCount);
 
                 var statAll = new List<Statistic>();
                 for (int i = 0; i < statRise.Count; i++)
@@ -499,12 +504,12 @@ namespace SignalCompressionMUI.ViewModels
             if (CompressTypeHuffman)
             {
                 #region Huffman
-
+                stat = WaveletModel.Convert(WvType, CoeffCount, Rounding, BlockSize, Depth);
                 List<Statistic> statHuff;
                 var encoded = WaveletModel.EncodeHuffman(WaveletModel.ConvertedBlocks, out statHuff);
 
                 //сохранить
-                WaveletModel.Compressed = AccessoryFunc.CreateForSaving(encoded, CompressionType);
+                WaveletModel.Compressed = AccessoryFunc.CreateForSavingWv(encoded, CompressionType, WvType, CoeffCount, Rounding, Depth, RleCount);
 
                 var statAll = new List<Statistic>();
                 for (int i = 0; i < statHuff.Count; i++)
@@ -528,14 +533,14 @@ namespace SignalCompressionMUI.ViewModels
             if (CompressTypeRleHuffman)
             {
                 #region RleHuff
-
+                stat = WaveletModel.Convert(WvType, CoeffCount, Rounding, BlockSize, Depth);
                 List<Statistic> statRle;
                 List<Statistic> statHuff;
                 var encRise = WaveletModel.EncodeRleShort(WaveletModel.ConvertedBlocks, out statRle, RleCount);
                 var encHuff = WaveletModel.EncodeHuffman(encRise, out statHuff);
 
                 //сохранить
-                WaveletModel.Compressed = AccessoryFunc.CreateForSaving(encHuff, CompressionType);
+                WaveletModel.Compressed = AccessoryFunc.CreateForSavingWv(encHuff, CompressionType, WvType, CoeffCount, Rounding, Depth, RleCount);
 
                 var statAll = new List<Statistic>();
                 for (int i = 0; i < statRle.Count; i++)
@@ -802,10 +807,25 @@ namespace SignalCompressionMUI.ViewModels
         private void DecompressFile()
         {
             //надо все это в модель переместить
-            CompressType type;
-            var dec = AccessoryFunc.CreateFromSaving(WaveletModel.CompressedFromFile, out type);
+            CompressType encType;
+            WaveletType wvType;
+            СoeffCount coeffCount;
+            int round, depth, rleCount;
+            var dec = AccessoryFunc.CreateFromSavingWv(WaveletModel.CompressedFromFile, out encType, out wvType, out coeffCount, out round, out depth, out rleCount);
+            CompressionType = encType;
+            WvType = wvType;
+            CoeffCount = coeffCount;
+            Rounding = round;
+            Depth = depth;
+            RleCount = rleCount;
+            CompressTypeNothing = CompressionType == CompressType.Nothing;
+            CompressTypeHuffman = CompressionType == CompressType.Huffman;
+            CompressTypeRise = CompressionType == CompressType.Rise;
+            CompressTypeRiseRle = CompressionType == CompressType.RiseRle;
+            CompressTypeRle = CompressionType == CompressType.Rle;
+            CompressTypeRleHuffman = CompressionType == CompressType.RleHuffman;
 
-            switch (type)
+            switch (encType)
             {
                 case  CompressType.Rise:
                 {
@@ -944,6 +964,38 @@ namespace SignalCompressionMUI.ViewModels
             }
 
             excelApp.Visible = true;
+        }
+
+        private void ClearAll()
+        {
+            WaveletModel.SequenceSourse = null;
+            WaveletModel.SequenceSmoothed = null;
+            WaveletModel.ConvertedBlocks = null;
+            WaveletModel.Converted = null;
+            WaveletModel.Compressed = null;
+            WaveletModel.CompressedFromFile = null;
+            WaveletModel.NothingStat = new Statistic();
+            WaveletModel.RiseStat = new Statistic();
+            WaveletModel.RleStat = new Statistic();
+            WaveletModel.HuffStat = new Statistic();
+            WaveletModel.RleRiseStat = new Statistic();
+            WaveletModel.RleHuffStat = new Statistic();
+            StatisticTable = null;
+            FileName = "";
+            WaveletModel.StatChanged();
+
+            var sourseSpectrum = Spectrum.CalculateSpectrum(WaveletModel.SequenceSourse);
+            var newSpectrum = Spectrum.CalculateSpectrum(WaveletModel.SequenceSmoothed);
+
+            OxyPlotModel.SequenceSourse = WaveletModel.SequenceSourse ?? new short[1];
+            OxyPlotModel.SequenceNew = WaveletModel.SequenceSmoothed ?? new short[1];
+            OxyPlotSpectrumModel.SpectrumSourse = sourseSpectrum;
+            OxyPlotSpectrumModel.SpectrumNew = newSpectrum;
+
+            ZedGraphView.CurveSourse = ZedGraphView.ListToPointList(WaveletModel.SequenceSourse);
+            ZedGraphView.CurveNew = ZedGraphView.ListToPointList(WaveletModel.SequenceSmoothed);
+            ZedGraphSpectrumView.SpectrumSourse = ZedGraphSpectrumView.ArrayToPointList(sourseSpectrum);
+            ZedGraphSpectrumView.SpectrumNew = ZedGraphSpectrumView.ArrayToPointList(newSpectrum);
         }
 
         #endregion

@@ -50,10 +50,10 @@
             <TextBlock Margin="0 20 0 0">Метод сжатия:</TextBlock>
             <GroupBox  Margin="0 0 10 10">
                 <StackPanel Margin="0 10 0 0">
-                    <RadioButton Margin="10 6" IsChecked="{Binding CompressTypeNothing, Mode=TwoWay}">Без сжатия</RadioButton>
-                    <RadioButton Margin="10 6" IsChecked="{Binding CompressTypeRise, Mode=TwoWay}">Алгоритм Райса</RadioButton>
-                    <RadioButton Margin="10 6" IsChecked="{Binding CompressTypeRiseRle, Mode=TwoWay}">Алгоритм RLE + Райса</RadioButton>
-                    <RadioButton Margin="10 6" IsChecked="{Binding CompressTypeRiseHuffman, Mode=TwoWay}">Алгоритм Хаффмана + Райса</RadioButton>
+                    <CheckBox Margin="10 6" IsChecked="{Binding CompressTypeNothing, Mode=TwoWay}">Без сжатия</CheckBox>
+                    <CheckBox Margin="10 6" IsChecked="{Binding CompressTypeRise, Mode=TwoWay}">Алгоритм Райса</CheckBox>
+                    <CheckBox Margin="10 6" IsChecked="{Binding CompressTypeRiseRle, Mode=TwoWay}">Алгоритм RLE + Райса</CheckBox>
+                    <CheckBox Margin="10 6" IsChecked="{Binding CompressTypeRiseHuffman, Mode=TwoWay}">Алгоритм Хаффмана + Райса</CheckBox>
                 </StackPanel>
             </GroupBox>
             <StackPanel.Resources>
@@ -101,12 +101,13 @@
                     <PathGeometry x:Key="ExcelIcon">F1 M 19,17L 41.25,17L 54,29.75L 54,37L 50,37L 50,33L 38,33L 38,21L 23,21L 23,55L 34.25,55L 31,59L 19,59L 19,17 Z M 54,56.75L 50,51L 50,47L 54,42L 54,56.75 Z M 40.25,59L 43.235,55.3453L 45.5,59L 40.25,59 Z M 41,22.25L 41,30L 48.75,30L 41,22.25 Z M 32.25,38L 39.5,38L 44.0374,44.4221L 49,38L 55.5,38L 47.0067,48.7036L 57,63L 49.5,63L 43.2223,53.5201L 38,60L 31.5,60L 40.2529,49.2387L 32.25,38 Z</PathGeometry>
                     <PathGeometry x:Key="SaveIcon">F1 M 20.5833,20.5833L 55.4167,20.5833L 55.4167,55.4167L 45.9167,55.4167L 45.9167,44.3333L 30.0833,44.3333L 30.0833,55.4167L 20.5833,55.4167L 20.5833,20.5833 Z M 33.25,55.4167L 33.25,50.6667L 39.5833,50.6667L 39.5833,55.4167L 33.25,55.4167 Z M 26.9167,23.75L 26.9167,33.25L 49.0833,33.25L 49.0833,23.75L 26.9167,23.75 Z</PathGeometry>
                     <PathGeometry x:Key="ConvertIcon">F1 M 56.5,19.5C 56.3685,22.1936 54.6627,29.9797 41.8079,42.8345L 40.9436,50.6127L 33.1654,58.3909L 34.0297,50.6127L 25.3873,41.9703L 17.6091,42.8345L 25.3873,35.0564L 33.1654,34.1921C 46.0202,21.3373 53.3743,19.1994 56.5,19.5 Z M 23.2267,52.7733L 26.2515,44.563L 31.437,49.7485L 23.2267,52.7733 Z M 49.5861,26.4139L 47.5931,25.2182L 44.4225,27.4642L 46.9933,29.0067L 48.4788,31.4825L 50.6849,28.2454L 49.5861,26.4139 Z</PathGeometry>
+                    <PathGeometry x:Key="ClearIcon">F1 M 28.4718,42.9497L 33.4216,38L 28.4718,33.0502L 31.0502,30.4718L 36,35.4216L 40.9498,30.4718L 43.5282,33.0502L 38.5784,38L 43.5282,42.9497L 40.9498,45.5282L 36,40.5784L 31.0503,45.5282L 28.4718,42.9497 Z M 57.9853,41.5355L 49.0354,50.4854C 47.9317,51.589 47,52 45,52L 24,52C 21.2386,52 19,49.7614 19,47L 19,29C 19,26.2386 21.2386,24 24,24L 45,24C 47,24 47.9317,24.4113 49.0354,25.5149L 57.9853,34.4645C 59.9379,36.4171 59.9379,39.5829 57.9853,41.5355 Z M 45,49C 46,49 46.3952,48.8828 46.914,48.3641L 55.8639,39.4142C 56.645,38.6332 56.645,37.3669 55.8639,36.5858L 46.914,27.6362C 46.3952,27.1175 46,27 45,27.0001L 24,27.0001C 22.8954,27.0001 22,27.8955 22,29.0001L 22,47.0001C 22,48.1046 22.8954,49.0001 24,49.0001L 45,49 Z</PathGeometry>
                 </StackPanel.Resources>
                 <ProgressBar Minimum="0" Maximum="1" Height="16" IsIndeterminate="True" Margin="0 10 10 5" Visibility="{Binding PBar, IsAsync=True}"/>
                 
                 <Grid>
                     <Grid.ColumnDefinitions>
-                        <!--<ColumnDefinition Width="*"></ColumnDefinition>-->
+                        <ColumnDefinition></ColumnDefinition>
                         <ColumnDefinition></ColumnDefinition>
                         <ColumnDefinition></ColumnDefinition>
                     </Grid.ColumnDefinitions>
@@ -115,6 +116,9 @@
                     </WrapPanel>
                     <WrapPanel HorizontalAlignment="Center" Grid.Column="1">
                         <mui:ModernButton IsEnabled="{Binding IsStatExist}" Command="{Binding OpenInExcelCommand}" IconData="{StaticResource ExcelIcon}" EllipseDiameter="30" IconWidth="18" IconHeight="18">Выгрузить статистику</mui:ModernButton>
+                    </WrapPanel>
+                    <WrapPanel HorizontalAlignment="Center" Grid.Column="2">
+                        <mui:ModernButton Command="{Binding ClearAllCommand}" IconData="{StaticResource ClearIcon}" EllipseDiameter="30" IconWidth="18" IconHeight="18">Очистить все</mui:ModernButton>
                     </WrapPanel>
                 </Grid>
                 <Button IsDefault="True" IsEnabled="{Binding ConvertIsEnabled}" Command="{Binding ConvertCommand}" Padding="5" Margin="0 15 10 10">Преобразовать</Button>

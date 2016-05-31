@@ -421,6 +421,7 @@ namespace SignalCompressionMUI.ViewModels
             if (CompressTypeRise)
             {
                 #region Rise
+                encDct = DCTModel.ConvertDct(BlockSize, CoeffCount, MyIntsToDoubles(CoeffCorrection), out stat, CoeffDC);
 
                 List<byte[]> encRise;
                 var statRise = DCTModel.EncodeRiseNew(encDct, out encRise);
@@ -450,6 +451,7 @@ namespace SignalCompressionMUI.ViewModels
             if (CompressTypeRiseAcDc)
             {
                 #region RiseAcDc
+                encDct = DCTModel.ConvertDct(BlockSize, CoeffCount, MyIntsToDoubles(CoeffCorrection), out stat, CoeffDC);
 
                 DCTModel.DivideOnDcAc(encDct, BlockSize, CoeffCount, CoeffDC);
                 List<byte[]> encodedDc;
@@ -484,6 +486,7 @@ namespace SignalCompressionMUI.ViewModels
             if (CompressTypeRiseRle)
             {
                 #region RiseRle
+                encDct = DCTModel.ConvertDct(BlockSize, CoeffCount, MyIntsToDoubles(CoeffCorrection), out stat, CoeffDC);
 
                 List<short[]> encRle;
                 var statRle = DCTModel.EncodeRleNew(encDct, out encRle);
@@ -520,6 +523,7 @@ namespace SignalCompressionMUI.ViewModels
             if (CompressTypeRiseRleAcDc)
             {
                 #region RiseRleAcDc
+                encDct = DCTModel.ConvertDct(BlockSize, CoeffCount, MyIntsToDoubles(CoeffCorrection), out stat, CoeffDC);
 
                 DCTModel.DivideOnDcAc(encDct, BlockSize, CoeffCount, CoeffDC);
                 List<byte[]> encDcRise;
@@ -560,6 +564,7 @@ namespace SignalCompressionMUI.ViewModels
             if (CompressTypeHuffman)
             {
                 #region Huff
+                encDct = DCTModel.ConvertDct(BlockSize, CoeffCount, MyIntsToDoubles(CoeffCorrection), out stat, CoeffDC);
 
                 List<byte[]> encHuff;
                 var statHuff = DCTModel.EncodeHuffman(encDct, out encHuff);
@@ -588,6 +593,7 @@ namespace SignalCompressionMUI.ViewModels
             if (CompressTypeHuffmanRleAcDc)
             {
                 #region HuffRleAcDc
+                encDct = DCTModel.ConvertDct(BlockSize, CoeffCount, MyIntsToDoubles(CoeffCorrection), out stat, CoeffDC);
 
                 DCTModel.DivideOnDcAc(encDct, BlockSize, CoeffCount, CoeffDC);
                 List<byte[]> encHuffDc;
@@ -623,254 +629,6 @@ namespace SignalCompressionMUI.ViewModels
 
                 #endregion
             }
-
-            #region oldswitch
-                        //switch (CompressionType)
-                        //{
-                        //    case CompressType.Nothing:
-                        //    {
-                        //        #region Nothing
-
-                        //        DCTModel.SequenceSmoothed = DCTModel.DeconvertDct(encDct, BlockSize, CoeffDC);
-                        //        Statistic.CalculateError(DCTModel.SequenceSourse, DCTModel.SequenceSmoothed, ref stat, BlockSize);
-                        //        stat.Insert(0, Statistic.CalculateTotal(stat));
-                        //        DCTModel.NothingStat = stat.First();
-                        //        StatisticTable = stat;
-                        //        break;
-
-                        //        #endregion
-                        //    }
-                        //    case CompressType.Rise:
-                        //    {
-                        //        #region Rise
-
-                        //        List<byte[]> encRise;
-                        //        var statRise = DCTModel.EncodeRiseNew(encDct, out encRise);
-
-                        //        var statAll = new List<Statistic>();
-                        //        for (int i = 0; i < statRise.Count; i++)
-                        //        {
-                        //            var all = statRise[i];
-                        //            all.Time += stat[i].Time;
-                        //            all.BlockSourseSize = stat[i].BlockSourseSize;
-                        //            statAll.Add(all);
-                        //        }
-
-                        //        encDct = DCTModel.DecodeRiseNew(encRise);
-                        //        DCTModel.SequenceSmoothed = DCTModel.DeconvertDct(encDct, BlockSize, CoeffDC);
-
-
-                        //        Statistic.CalculateError(DCTModel.SequenceSourse, DCTModel.SequenceSmoothed, ref statAll, BlockSize);
-                        //        statAll.Insert(0, Statistic.CalculateTotal(statAll));
-                        //        DCTModel.RiseStat = statAll.First();
-                        //        StatisticTable = statAll;
-
-                        //        break;
-
-                        //        #endregion
-                        //    }
-                        //    case CompressType.RiseAcDc:
-                        //    {
-                        //        #region RiseAcDc
-
-                        //        DCTModel.DivideOnDcAc(encDct, BlockSize, CoeffCount, CoeffDC);
-                        //        List<byte[]> encodedDc;
-                        //        var statDc = DCTModel.EncodeRiseNew(DCTModel.DcBlocks, out encodedDc);
-                        //        List<byte[]> encodedAc;
-                        //        var statAc = DCTModel.EncodeRiseNew(DCTModel.AcBlocks, out encodedAc);
-
-                        //        var statAll = new List<Statistic>();
-                        //        for (int i = 0; i < statAc.Count; i++)
-                        //        {
-                        //            var all = statDc[i] + statAc[i];
-                        //            all.Time += stat[i].Time;
-                        //            all.BlockSourseSize = stat[i].BlockSourseSize;
-                        //            statAll.Add(all);
-                        //        }
-
-                        //        DCTModel.DcBlocksDecoded = DCTModel.DecodeRiseNew(encodedDc);
-                        //        DCTModel.AcBlocksDecoded = DCTModel.DecodeRiseNew(encodedAc);
-                        //        encDct = DCTModel.ConcatDcAc(DCTModel.DcBlocksDecoded, DCTModel.AcBlocksDecoded, CoeffCount, CoeffDC);
-                        //        DCTModel.SequenceSmoothed = DCTModel.DeconvertDct(encDct, BlockSize, CoeffDC);
-
-
-                        //        Statistic.CalculateError(DCTModel.SequenceSourse, DCTModel.SequenceSmoothed, ref statAll, BlockSize);
-                        //        statAll.Insert(0, Statistic.CalculateTotal(statAll));
-                        //        DCTModel.RiseAcDcStat = statAll.First();
-                        //        StatisticTable = statAll;
-
-                        //        break;
-
-                        //        #endregion
-                        //    }
-                        //    case CompressType.RiseRle:
-                        //    {
-                        //        #region RiseRle
-
-                        //        List<short[]> encRle;
-                        //        var statRle = DCTModel.EncodeRleNew(encDct, out encRle);
-
-                        //        List<byte[]> encRise;
-                        //        var statRise = DCTModel.EncodeRiseNew(encRle, out encRise);
-
-                        //        var statAll = new List<Statistic>();
-                        //        for (int i = 0; i < statRise.Count; i++)
-                        //        {
-                        //            var all = statRise[i] + statRle[i];
-                        //            all.Time += stat[i].Time;
-                        //            all.BlockRezultSize = statRise[i].BlockRezultSize;
-                        //            all.BlockSourseSize = stat[i].BlockSourseSize;
-                        //            statAll.Add(all);
-                        //        }
-
-                        //        var decRise = DCTModel.DecodeRiseNew(encRise);
-                        //        var decRle = DCTModel.DecodeRleNew(decRise);
-
-                        //        DCTModel.SequenceSmoothed = DCTModel.DeconvertDct(decRle, BlockSize, CoeffDC);
-
-
-                        //        Statistic.CalculateError(DCTModel.SequenceSourse, DCTModel.SequenceSmoothed, ref statAll, BlockSize);
-                        //        statAll.Insert(0, Statistic.CalculateTotal(statAll));
-                        //        DCTModel.RiseRleStat = statAll.First();
-                        //        StatisticTable = statAll;
-
-                        //        break;
-
-                        //        #endregion
-                        //    }
-                        //    case CompressType.RiseRleAcDc:
-                        //    {
-                        //        #region RiseRleAcDc
-
-                        //        // еще rle можно применять побайтово или на short (реализовано) сейчас по 2 байта - не надо наверное так/ 
-                        //        //мда, только хуже.. нет, норм, но лучше short
-
-                        //        DCTModel.DivideOnDcAc(encDct, BlockSize, CoeffCount, CoeffDC);
-                        //        List<byte[]> encDcRise;
-                        //        var statDcRise = DCTModel.EncodeRiseNew(DCTModel.DcBlocks, out encDcRise);
-
-                        //        List<short[]> encAcRle;
-                        //        var statAcRle = DCTModel.EncodeRleNew(DCTModel.AcBlocks, out encAcRle);
-                        //        List<byte[]> encAcRiseRle;
-                        //        var statAcRleRise = DCTModel.EncodeRiseNew(encAcRle, out encAcRiseRle);
-
-                        //        var statAll = new List<Statistic>();
-                        //        for (int i = 0; i < statDcRise.Count; i++)
-                        //        {
-                        //            var all = statDcRise[i] + statAcRle[i] + statAcRleRise[i] + stat[i];
-                        //            all.BlockSourseSize = stat[i].BlockSourseSize;
-                        //            all.BlockRezultSize = statDcRise[i].BlockRezultSize + statAcRleRise[i].BlockRezultSize;
-                        //            statAll.Add(all);
-                        //        }
-
-                        //        var decAcRiseRle = DCTModel.DecodeRiseNew(encAcRiseRle);
-                        //        var decAcRle = DCTModel.DecodeRleNew(decAcRiseRle);
-                        //        var decDc = DCTModel.DecodeRiseNew(encDcRise);
-                        //        var encDcAc = DCTModel.ConcatDcAc(decDc, decAcRle, CoeffCount, CoeffDC);
-
-                        //        DCTModel.SequenceSmoothed = DCTModel.DeconvertDct(encDcAc, BlockSize, CoeffDC);
-
-
-                        //        Statistic.CalculateError(DCTModel.SequenceSourse, DCTModel.SequenceSmoothed, ref statAll, BlockSize);
-                        //        statAll.Insert(0, Statistic.CalculateTotal(statAll));
-                        //        DCTModel.RiseRleAcDcStat = statAll.First();
-                        //        StatisticTable = statAll;
-
-                        //        break;
-
-                        //        #endregion
-                        //    }
-                        //    case CompressType.Huffman:
-                        //    {
-                        //        #region Huff
-
-                        //        List<byte[]> encHuff;
-                        //        var statHuff = DCTModel.EncodeHuffman(encDct, out encHuff);
-
-                        //        var statAll = new List<Statistic>();
-                        //        for (int i = 0; i < statHuff.Count; i++)
-                        //        {
-                        //            var all = statHuff[i];
-                        //            all.Time += stat[i].Time;
-                        //            all.BlockSourseSize = stat[i].BlockSourseSize;
-                        //            statAll.Add(all);
-                        //        }
-
-                        //        var decHuff = DCTModel.DecodeHuffman(encHuff);
-                        //        DCTModel.SequenceSmoothed = DCTModel.DeconvertDct(decHuff, BlockSize, CoeffDC);
-
-                        //        Statistic.CalculateError(DCTModel.SequenceSourse, DCTModel.SequenceSmoothed, ref statAll, BlockSize);
-                        //        statAll.Insert(0, Statistic.CalculateTotal(statAll));
-                        //        DCTModel.HuffmanStat = statAll.First();
-                        //        StatisticTable = statAll;
-
-                        //        break;
-
-                        //        #endregion
-                        //    }
-                        //    case CompressType.HuffmanRleAcDc:
-                        //    {
-                        //            DCTModel.DivideOnDcAc(encDct, BlockSize, CoeffCount, CoeffDC);
-                        //            List<byte[]> encHuffDc;
-                        //            var statHuffDc = DCTModel.EncodeHuffman(DCTModel.DcBlocks, out encHuffDc);
-
-                        //            List<short[]> encAcRle;
-                        //            var statAcRle = DCTModel.EncodeRleNew(DCTModel.AcBlocks, out encAcRle);
-                        //            List<byte[]> encHuffAc;
-                        //            var statHuffAc = DCTModel.EncodeHuffman(encAcRle, out encHuffAc);
-
-                        //            var statAll = new List<Statistic>();
-                        //            for (int i = 0; i < statHuffAc.Count; i++)
-                        //            {
-                        //                var all = statHuffDc[i] + statHuffAc[i] + statAcRle[i] + stat[i];
-                        //                all.BlockRezultSize = statHuffAc[i].BlockRezultSize + statHuffDc[i].BlockRezultSize;
-                        //                all.BlockSourseSize = stat[i].BlockSourseSize;
-                        //                statAll.Add(all);
-                        //            }
-
-                        //            DCTModel.DcBlocksDecoded = DCTModel.DecodeHuffman(encHuffDc);
-                        //            DCTModel.AcBlocksDecoded = DCTModel.DecodeRleNew(DCTModel.DecodeHuffman(encHuffAc));
-                        //            var decHuff = DCTModel.ConcatDcAc(DCTModel.DcBlocksDecoded, DCTModel.AcBlocksDecoded, CoeffCount, CoeffDC);
-                        //            DCTModel.SequenceSmoothed = DCTModel.DeconvertDct(decHuff, BlockSize, CoeffDC);
-
-
-                        //            Statistic.CalculateError(DCTModel.SequenceSourse, DCTModel.SequenceSmoothed, ref statAll, BlockSize);
-                        //            statAll.Insert(0, Statistic.CalculateTotal(statAll));
-                        //            DCTModel.HuffmanRleAcDcStat = statAll.First();
-                        //            StatisticTable = statAll;
-
-
-
-                        //            //DCTModel.DivideOnDcAc(encDct, BlockSize, CoeffCount, CoeffDC);
-                        //            //List<byte[]> encHuffDc;
-                        //            //var statHuffDc = DCTModel.EncodeHuffman(DCTModel.DcBlocks, out encHuffDc);
-                        //            //List<byte[]> encHuffAc;
-                        //            //var statHuffAc = DCTModel.EncodeHuffman(DCTModel.AcBlocks, out encHuffAc);
-
-                        //            //var statAll = new List<Statistic>();
-                        //            //for (int i = 0; i < statHuffAc.Count; i++)
-                        //            //{
-                        //            //    var all = statHuffDc[i] + statHuffAc[i];
-                        //            //    all.Time += stat[i].Time;
-                        //            //    all.BlockSourseSize = stat[i].BlockSourseSize;
-                        //            //    statAll.Add(all);
-                        //            //}
-
-                        //            //DCTModel.DcBlocksDecoded = DCTModel.DecodeHuffman(encHuffDc);
-                        //            //DCTModel.AcBlocksDecoded = DCTModel.DecodeHuffman(encHuffAc);
-                        //            //var decHuff = DCTModel.ConcatDcAc(DCTModel.DcBlocksDecoded, DCTModel.AcBlocksDecoded, CoeffCount, CoeffDC);
-                        //            //DCTModel.SequenceSmoothed = DCTModel.DeconvertDct(decHuff, BlockSize, CoeffDC);
-
-
-                        //            //Statistic.CalculateError(DCTModel.SequenceSourse, DCTModel.SequenceSmoothed, ref statAll, BlockSize);
-                        //            //statAll.Insert(0, Statistic.CalculateTotal(statAll));
-                        //            //DCTModel.RiseAcDcStat = statAll.First();
-                        //            //StatisticTable = statAll;
-
-                        //            break;
-                        //    }
-                        //}
-            #endregion
 
             var sourseSpectrum = Spectrum.CalculateSpectrum(DCTModel.SequenceSourse);
             var newSpectrum = Spectrum.CalculateSpectrum(DCTModel.SequenceSmoothed);

@@ -41,15 +41,7 @@ namespace SignalCompressionMUI.Models
         private static short[] _sequenceSourse;
         private static bool _genStatChanged;
 
-        public static bool GenStatChanged
-        {
-            get { return _genStatChanged; }
-            set
-            {
-                _genStatChanged = value;
-                if (_genStatChanged) OnStatChanged?.Invoke();
-            }
-        }
+        public static void StatChanged() => OnStatChanged?.Invoke();
 
         public static Statistic NothingStat { get; set; }
         public static Statistic RiseStat { get; set; }
